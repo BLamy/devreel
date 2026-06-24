@@ -1,0 +1,310 @@
+{
+  "slug": "react-useeffect",
+  "title": "useEffect",
+  "subtitle": "Run a side effect after render — fetch data",
+  "library": "react",
+  "throughline": "effects",
+  "persona": "devreel",
+  "accent": "#38bdf8",
+  "format": "video",
+  "series": "React Hooks",
+  "seriesOrder": 2,
+  "stage": {
+    "editor": 0.56,
+    "mobileEditor": 0.56
+  },
+  "workspace": {
+    "files": {
+      "/index.html": "<!doctype html>\n<html>\n  <head><meta charset=\"utf-8\" /><title>preview</title></head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"./src/main.jsx\"></script>\n  </body>\n</html>\n",
+      "/src/main.jsx": "import React from 'react'\nimport { createRoot } from 'react-dom/client'\nimport App from './App.jsx'\ncreateRoot(document.getElementById('root')).render(<App />)\n",
+      "/src/App.jsx": "import React, { useEffect, useState } from 'react'\n\nexport default function App() {\n  const [tip, setTip] = useState('')\n\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.com/todos/1')\n      .then((r) => r.json())\n      .then((d) => setTip(d.title))\n  }, [])\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">Tip of the day</h1>\n      <p className=\"mt-4 text-slate-600\">{tip || 'loading…'}</p>\n    </div>\n  )\n}\n"
+    },
+    "previewPort": 3000,
+    "previewMode": "react"
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "chapter": "Intro",
+      "focus": "editor",
+      "narration": "**useEffect** runs a side effect after render. We'll fetch a tip on mount.",
+      "say": "useEffect lets you run a side effect after the component renders. We will use it to fetch a tip when the component mounts, and explain every line.",
+      "cue": "run a side effect"
+    },
+    {
+      "id": "s2",
+      "chapter": "Import",
+      "focus": "editor",
+      "narration": "Import `useEffect` and `useState`.",
+      "say": "We import useEffect and useState from React. We need state to hold the fetched value.",
+      "cue": "import useEffect and useState",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "import React, { useEffect, useState } from 'react'\n\n"
+      }
+    },
+    {
+      "id": "s3",
+      "chapter": "Component",
+      "focus": "editor",
+      "narration": "The component.",
+      "say": "Our component function, App.",
+      "cue": "component function",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "export default function App() {\n"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "State",
+      "focus": "editor",
+      "narration": "`tip` holds the fetched text, starting empty.",
+      "say": "A piece of state called tip, starting as an empty string. The fetch will fill it.",
+      "cue": "piece of state called tip",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "  const [tip, setTip] = useState('')\n\n"
+      }
+    },
+    {
+      "id": "s5",
+      "chapter": "Effect",
+      "focus": "editor",
+      "narration": "`useEffect` takes a function React runs **after** render.",
+      "say": "useEffect takes a function that React runs after the render is painted. This is the right place for side effects like data fetching — never directly in the component body, which runs during render.",
+      "cue": "after the render",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "  useEffect(() => {\n"
+      }
+    },
+    {
+      "id": "s6",
+      "chapter": "Fetch",
+      "focus": "editor",
+      "narration": "`fetch` returns a promise of the response.",
+      "say": "Inside, we call fetch with a URL. fetch returns a promise that resolves to the response.",
+      "cue": "call fetch with a URL",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "    fetch('https://jsonplaceholder.typicode.com/todos/1')\n"
+      }
+    },
+    {
+      "id": "s7",
+      "chapter": "Parse",
+      "focus": "editor",
+      "narration": "The first `.then` parses JSON.",
+      "say": "The first dot then parses the response body as JSON, returning another promise with the data.",
+      "cue": "parses the response body",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "      .then((r) => r.json())\n"
+      }
+    },
+    {
+      "id": "s8",
+      "chapter": "Store",
+      "focus": "editor",
+      "narration": "The second `.then` saves the title with `setTip`.",
+      "say": "The second dot then takes that data and stores its title into state with setTip, which re-renders the component with the tip.",
+      "cue": "stores its title into state",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "      .then((d) => setTip(d.title))\n"
+      }
+    },
+    {
+      "id": "s9",
+      "chapter": "Deps",
+      "focus": "editor",
+      "narration": "The empty dependency array `[]` means **run once**, on mount.",
+      "say": "The most important part is the second argument: an empty dependency array. It tells React to run this effect only once, right after the first render, and never again.",
+      "cue": "most important part",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "  }, [])\n\n",
+        "callouts": [
+          {
+            "line": 10,
+            "text": "[] = run once on mount",
+            "kind": "tip"
+          }
+        ]
+      }
+    },
+    {
+      "id": "s10",
+      "chapter": "JSX",
+      "focus": "editor",
+      "narration": "Markup: a heading and the tip.",
+      "say": "Now the markup.",
+      "cue": "Now the markup",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "  return (\n"
+      }
+    },
+    {
+      "id": "s11",
+      "chapter": "Layout",
+      "focus": "editor",
+      "narration": "Tailwind wrapper + heading.",
+      "say": "A div styled with Tailwind: min height screen, a light b g slate fifty background, p eight padding, dark text slate nine hundred. And a bold heading with text two x l and font bold.",
+      "cue": "styled with Tailwind",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n"
+      }
+    },
+    {
+      "id": "s12",
+      "chapter": "Output",
+      "focus": "editor",
+      "narration": "Show the tip, or \"loading\" until it arrives.",
+      "say": "The heading, then a paragraph. m t four for spacing, text slate six hundred for a muted grey. It shows the tip, or the word loading while the fetch is still in flight.",
+      "cue": "a paragraph",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "      <h1 className=\"text-2xl font-bold\">Tip of the day</h1>\n"
+      }
+    },
+    {
+      "id": "s13",
+      "chapter": "Output",
+      "focus": "editor",
+      "narration": "The paragraph binds `tip`.",
+      "say": "And here is that paragraph, binding the tip value.",
+      "cue": "binding the tip",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "      <p className=\"mt-4 text-slate-600\">{tip || 'loading…'}</p>\n"
+      }
+    },
+    {
+      "id": "s14",
+      "chapter": "A common bug",
+      "focus": "editor",
+      "narration": "Omit the dependency array and the effect runs after **every** render — a fetch loop.",
+      "say": "Here's the classic useEffect bug. If you omit the dependency array entirely, the effect runs after every render. The fetch calls setTip, which re-renders, which runs the effect again — an endless fetch loop.",
+      "cue": "classic useEffect bug",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "replace": "import React, { useEffect, useState } from 'react'\n\nexport default function App() {\n  const [tip, setTip] = useState('')\n\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.com/todos/1')\n      .then((r) => r.json())\n      .then((d) => setTip(d.title))\n  })\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">Tip of the day</h1>\n      <p className=\"mt-4 text-slate-600\">{tip || 'loading…'}</p>\n    </div>\n  )\n}\n",
+        "typed": false,
+        "reveal": [
+          8,
+          10
+        ],
+        "diagnostics": [
+          {
+            "line": 10,
+            "message": "Missing dependency array: this effect runs after every render and re-fetches forever. Add [].",
+            "severity": "error"
+          }
+        ],
+        "callouts": [
+          {
+            "line": 10,
+            "text": "🐛 runs every render",
+            "kind": "warn"
+          }
+        ]
+      }
+    },
+    {
+      "id": "s15",
+      "chapter": "The fix",
+      "focus": "editor",
+      "narration": "Add `[]` so it runs once.",
+      "say": "The fix is to add the empty dependency array, so the effect runs exactly once.",
+      "cue": "add the empty dependency",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "replace": "import React, { useEffect, useState } from 'react'\n\nexport default function App() {\n  const [tip, setTip] = useState('')\n\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.com/todos/1')\n      .then((r) => r.json())\n      .then((d) => setTip(d.title))\n  }, [])\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">Tip of the day</h1>\n      <p className=\"mt-4 text-slate-600\">{tip || 'loading…'}</p>\n    </div>\n  )\n}\n",
+        "typed": false,
+        "reveal": [
+          9,
+          11
+        ],
+        "callouts": [
+          {
+            "line": 10,
+            "text": "✅ runs once",
+            "kind": "tip"
+          }
+        ]
+      }
+    },
+    {
+      "id": "s16",
+      "chapter": "Live",
+      "focus": "preview",
+      "narration": "On mount, the effect fetches the tip and renders it.",
+      "say": "Here it runs live. On mount, the effect fetches the tip, and it appears.",
+      "cue": "runs live",
+      "action": {
+        "tool": "preview",
+        "steps": [
+          {
+            "cmd": "waitFor",
+            "selector": "p"
+          }
+        ]
+      }
+    },
+    {
+      "id": "s17",
+      "chapter": "Devtools",
+      "focus": "preview",
+      "narration": "In the **network** tab, the one `fetch` to `/todos/1` — it ran **once**.",
+      "say": "And in the network tab, you can see exactly one request to todos one. Thanks to the empty dependency array, the effect ran a single time.",
+      "cue": "in the network tab",
+      "action": {
+        "tool": "preview",
+        "steps": [
+          {
+            "cmd": "network",
+            "match": "todos"
+          }
+        ]
+      }
+    }
+  ],
+  "audio": "/generated/react-useeffect/audio.mp3",
+  "cueTimes": [
+    0,
+    7.802,
+    13.967,
+    16.8,
+    21.815,
+    33.019,
+    38.417,
+    44.931,
+    52.582,
+    63.066,
+    64.424,
+    77.706,
+    89.501,
+    93.065,
+    107.032,
+    111.827,
+    117.249
+  ],
+  "durationSeconds": 125.156
+}

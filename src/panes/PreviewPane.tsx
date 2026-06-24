@@ -8,6 +8,8 @@ export interface PreviewPaneProps {
   port?: number
   action?: PreviewAction | null
   actionNonce?: number
+  /** The editor's current file content; written into the live VFS → HMR. */
+  liveFiles?: Record<string, string>
 }
 
 type Status = 'booting' | 'ready' | 'error'
@@ -26,11 +28,12 @@ function compileSteps(a: PreviewAction): PreviewStep[] {
 
 // Boots a live almostnode preview once and keeps it mounted, then drives each
 // scene's steps deterministically with an animated cursor + real Eruda/network.
-export function PreviewPane({ files, port = 3000, action, actionNonce }: PreviewPaneProps) {
+export function PreviewPane({ files, port = 3000, action, actionNonce, liveFiles }: PreviewPaneProps) {
   const iframeRef = useRef<HTMLIFrameElement | null>(null)
   const handleRef = useRef<PreviewHandle | null>(null)
   const driverRef = useRef<PreviewDriver | null>(null)
   const baseUrlRef = useRef<string>('')
+  const lastWrittenRef = useRef<Record<string, string>>({})
   const [status, setStatus] = useState<Status>('booting')
   const [error, setError] = useState('')
   const [cursor, setCursor] = useState<Cursor | null>(null)
@@ -59,6 +62,24 @@ export function PreviewPane({ files, port = 3000, action, actionNonce }: Preview
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
+
+  // Hot-reload: write the editor's current code into the live VFS so the dev
+  // server re-renders the iframe (HMR). Only complete files are passed in.
+  useEffect(() => {
+    const h = handleRef.current
+    if (!h || status !== 'ready' || !liveFiles) return
+    for (const [path, content] of Object.entries(liveFiles)) {
+      if (lastWrittenRef.current[path] === content) continue
+      try {
+        const dir = path.split('/').slice(0, -1).join('/')
+        if (dir && dir !== '/') h.container.vfs.mkdirSync(dir, { recursive: true })
+        h.container.vfs.writeFileSync(path, content)
+        lastWrittenRef.current[path] = content
+      } catch {
+        /* noop */
+      }
+    }
+  }, [liveFiles, status])
 
   // Run the current scene's steps.
   useEffect(() => {

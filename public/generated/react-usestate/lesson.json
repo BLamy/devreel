@@ -1,16 +1,23 @@
 {
   "slug": "react-usestate",
-  "title": "React state with useState",
-  "subtitle": "Build a counter that also fetches data",
+  "title": "useState",
+  "subtitle": "Remember a value between renders",
   "library": "react",
   "throughline": "state",
   "persona": "devreel",
   "accent": "#38bdf8",
+  "format": "video",
+  "series": "React Hooks",
+  "seriesOrder": 1,
+  "stage": {
+    "editor": 0.56,
+    "mobileEditor": 0.56
+  },
   "workspace": {
     "files": {
       "/index.html": "<!doctype html>\n<html>\n  <head><meta charset=\"utf-8\" /><title>preview</title></head>\n  <body>\n    <div id=\"root\"></div>\n    <script type=\"module\" src=\"./src/main.jsx\"></script>\n  </body>\n</html>\n",
       "/src/main.jsx": "import React from 'react'\nimport { createRoot } from 'react-dom/client'\nimport App from './App.jsx'\ncreateRoot(document.getElementById('root')).render(<App />)\n",
-      "/src/App.jsx": "import React, { useEffect, useState } from 'react'\n\nexport default function App() {\n  const [count, setCount] = useState(0)\n  const [tip, setTip] = useState('')\n\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.com/todos/1')\n      .then((r) => r.json())\n      .then((d) => setTip(d.title))\n  }, [])\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">useState counter</h1>\n      <button\n        className=\"mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500\"\n        onClick={() => setCount(count + 1)}\n      >\n        count is {count}\n      </button>\n      <p className=\"mt-4 text-slate-600\">{tip || 'loading…'}</p>\n    </div>\n  )\n}\n"
+      "/src/App.jsx": "import React, { useState } from 'react'\n\nexport default function App() {\n  const [count, setCount] = useState(0)\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">Counter</h1>\n      <button\n        className=\"mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500\"\n        onClick={() => setCount(count + 1)}\n      >\n        count is {count}\n      </button>\n    </div>\n  )\n}\n"
     },
     "previewPort": 3000,
     "previewMode": "react"
@@ -20,34 +27,47 @@
       "id": "s1",
       "chapter": "Intro",
       "focus": "editor",
-      "narration": "Let's learn **React state** with `useState` — a counter that also fetches a tip.",
-      "say": "Let's learn React state with useState, by building a counter that also fetches a tip.",
-      "cue": "Let's learn React state"
+      "narration": "The **useState** hook lets a component remember a value between renders. We'll build a counter.",
+      "say": "The useState hook lets a component remember a value between renders. Let's build a counter, and explain every line.",
+      "cue": "useState hook lets a component"
     },
     {
       "id": "s2",
-      "chapter": "Imports",
+      "chapter": "Import",
       "focus": "editor",
-      "narration": "First, import `useState` and `useEffect` from React.",
-      "say": "First, import useState and useEffect from React.",
-      "cue": "First, import",
+      "narration": "Import `useState` from React.",
+      "say": "First we import useState from React. It is a named export, so it goes in curly braces.",
+      "cue": "import useState from React",
       "action": {
         "tool": "editor",
         "file": "/src/App.jsx",
-        "type": "import React, { useEffect, useState } from 'react'\n\n"
+        "type": "import React, { useState } from 'react'\n\n"
       }
     },
     {
       "id": "s3",
-      "chapter": "The component",
+      "chapter": "Component",
       "focus": "editor",
-      "narration": "`useState(0)` returns the current value and a setter. We fetch a tip on mount with `useEffect`.",
-      "say": "useState returns the current value and a setter. We also fetch a tip on mount with useEffect.",
-      "cue": "useState returns",
+      "narration": "`App` is a function component that returns JSX.",
+      "say": "Our component is a function called App. Whatever it returns is what React draws.",
+      "cue": "function called App",
       "action": {
         "tool": "editor",
         "file": "/src/App.jsx",
-        "type": "export default function App() {\n  const [count, setCount] = useState(0)\n  const [tip, setTip] = useState('')\n\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.com/todos/1')\n      .then((r) => r.json())\n      .then((d) => setTip(d.title))\n  }, [])\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">useState counter</h1>\n      <button\n        className=\"mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500\"\n        onClick={() => setCount(count + 1)}\n      >\n        count is {count}\n      </button>\n      <p className=\"mt-4 text-slate-600\">{tip || 'loading…'}</p>\n    </div>\n  )\n}\n",
+        "type": "export default function App() {\n"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "State",
+      "focus": "editor",
+      "narration": "`useState(0)` returns `[value, setter]` — here, `count` and `setCount`, starting at 0.",
+      "say": "useState of zero is the key line. It returns a pair: the current value, count, and a function to update it, setCount. We name both with array destructuring, and the starting value is zero. Every time setCount runs, React re-renders with the new value.",
+      "cue": "the key line",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "  const [count, setCount] = useState(0)\n\n",
         "callouts": [
           {
             "line": 4,
@@ -58,27 +78,90 @@
       }
     },
     {
-      "id": "s4",
-      "chapter": "A common bug",
+      "id": "s5",
+      "chapter": "JSX",
       "focus": "editor",
-      "narration": "A classic mistake: calling `setCount` directly runs it on **every render** — an infinite loop.",
-      "say": "A classic mistake: calling setCount directly runs it on every render, causing an infinite loop.",
-      "cue": "A classic mistake",
+      "narration": "Now the markup we return.",
+      "say": "Now the markup the component returns.",
+      "cue": "the markup the component",
       "action": {
         "tool": "editor",
         "file": "/src/App.jsx",
-        "replace": "import React, { useEffect, useState } from 'react'\n\nexport default function App() {\n  const [count, setCount] = useState(0)\n  const [tip, setTip] = useState('')\n\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.com/todos/1')\n      .then((r) => r.json())\n      .then((d) => setTip(d.title))\n  }, [])\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">useState counter</h1>\n      <button\n        className=\"mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500\"\n        onClick={setCount(count + 1)}\n      >\n        count is {count}\n      </button>\n      <p className=\"mt-4 text-slate-600\">{tip || 'loading…'}</p>\n    </div>\n  )\n}\n",
+        "type": "  return (\n"
+      }
+    },
+    {
+      "id": "s6",
+      "chapter": "Layout",
+      "focus": "editor",
+      "narration": "A wrapper `div` styled with **Tailwind**.",
+      "say": "A wrapping div styled with Tailwind. min height screen makes it at least the viewport height. b g slate fifty is a light grey background. p eight is padding on all sides. And text slate nine hundred is dark text.",
+      "cue": "styled with Tailwind",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n"
+      }
+    },
+    {
+      "id": "s7",
+      "chapter": "Heading",
+      "focus": "editor",
+      "narration": "A bold heading.",
+      "say": "A heading. text two x l for size, font bold for weight.",
+      "cue": "A heading",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "      <h1 className=\"text-2xl font-bold\">Counter</h1>\n"
+      }
+    },
+    {
+      "id": "s8",
+      "chapter": "Button",
+      "focus": "editor",
+      "narration": "The button reads `count` and updates it with `setCount`.",
+      "say": "The button. m t four adds top margin. rounded l g gives rounded corners. b g indigo six hundred is the background color, with text white for the label. p x four and p y two are horizontal and vertical padding. hover b g indigo five hundred lightens it on hover. And the onClick calls setCount with count plus one, wrapped in an arrow function so it only runs on click.",
+      "cue": "The button",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "type": "      <button\n        className=\"mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500\"\n        onClick={() => setCount(count + 1)}\n      >\n        count is {count}\n      </button>\n",
+        "callouts": [
+          {
+            "line": 11,
+            "text": "arrow = runs on click",
+            "kind": "tip"
+          }
+        ]
+      }
+    },
+    {
+      "id": "s9",
+      "chapter": "A common bug",
+      "focus": "editor",
+      "narration": "Drop the arrow function and `setCount` runs on **every render** — an infinite loop.",
+      "say": "Here's the classic mistake. If you drop the arrow function and call setCount directly, React runs it during every render. That triggers another render, which calls it again — an infinite loop. React throws too many re-renders.",
+      "cue": "the classic mistake",
+      "action": {
+        "tool": "editor",
+        "file": "/src/App.jsx",
+        "replace": "import React, { useState } from 'react'\n\nexport default function App() {\n  const [count, setCount] = useState(0)\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">Counter</h1>\n      <button\n        className=\"mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500\"\n        onClick={setCount(count + 1)}\n      >\n        count is {count}\n      </button>\n    </div>\n  )\n}\n",
         "typed": false,
+        "reveal": [
+          10,
+          12
+        ],
         "diagnostics": [
           {
-            "line": 18,
+            "line": 11,
             "message": "Calling setCount during render causes 'Too many re-renders'. Wrap it in an arrow function.",
             "severity": "error"
           }
         ],
         "callouts": [
           {
-            "line": 18,
+            "line": 11,
             "text": "🐛 runs on every render",
             "kind": "warn"
           }
@@ -86,24 +169,24 @@
       }
     },
     {
-      "id": "s5",
+      "id": "s10",
       "chapter": "The fix",
       "focus": "editor",
-      "narration": "Wrap it in an arrow function so it only fires **on click**.",
-      "say": "Wrap it in an arrow function so it only fires on click.",
-      "cue": "Wrap it in an arrow",
+      "narration": "Wrap it in an arrow function — it only fires **on click**.",
+      "say": "The fix is the arrow function. Now setCount only runs when the user actually clicks.",
+      "cue": "the arrow function",
       "action": {
         "tool": "editor",
         "file": "/src/App.jsx",
-        "replace": "import React, { useEffect, useState } from 'react'\n\nexport default function App() {\n  const [count, setCount] = useState(0)\n  const [tip, setTip] = useState('')\n\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.com/todos/1')\n      .then((r) => r.json())\n      .then((d) => setTip(d.title))\n  }, [])\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">useState counter</h1>\n      <button\n        className=\"mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500\"\n        onClick={() => setCount(count + 1)}\n      >\n        count is {count}\n      </button>\n      <p className=\"mt-4 text-slate-600\">{tip || 'loading…'}</p>\n    </div>\n  )\n}\n",
+        "replace": "import React, { useState } from 'react'\n\nexport default function App() {\n  const [count, setCount] = useState(0)\n\n  return (\n    <div className=\"min-h-screen bg-slate-50 p-8 text-slate-900\">\n      <h1 className=\"text-2xl font-bold\">Counter</h1>\n      <button\n        className=\"mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500\"\n        onClick={() => setCount(count + 1)}\n      >\n        count is {count}\n      </button>\n    </div>\n  )\n}\n",
         "typed": false,
         "reveal": [
-          16,
-          19
+          10,
+          12
         ],
         "callouts": [
           {
-            "line": 18,
+            "line": 11,
             "text": "✅ arrow = on click",
             "kind": "tip"
           }
@@ -111,12 +194,12 @@
       }
     },
     {
-      "id": "s6",
+      "id": "s11",
       "chapter": "Live",
       "focus": "preview",
-      "narration": "Here it is running live — a real React app, not a screenshot.",
-      "say": "Here it is running live. A real React app, not a screenshot.",
-      "cue": "Here it is running live",
+      "narration": "Here it is running live, beside the code.",
+      "say": "And here it is running live, right beside the code.",
+      "cue": "running live",
       "action": {
         "tool": "preview",
         "steps": [
@@ -128,12 +211,12 @@
       }
     },
     {
-      "id": "s7",
+      "id": "s12",
       "chapter": "Try it",
       "focus": "preview",
-      "narration": "Watch — clicking the button runs `setCount`, and React re-renders the new count.",
-      "say": "Watch. Clicking the button runs setCount, and React re-renders the new count.",
-      "cue": "clicking the button",
+      "narration": "Each click calls `setCount`; React re-renders with the new count.",
+      "say": "Watch the counter. Each click calls setCount, React re-renders, and the number goes up. That is useState.",
+      "cue": "Watch the counter",
       "action": {
         "tool": "preview",
         "steps": [
@@ -148,23 +231,6 @@
           {
             "cmd": "click",
             "selector": "button"
-          }
-        ]
-      }
-    },
-    {
-      "id": "s8",
-      "chapter": "Devtools",
-      "focus": "preview",
-      "narration": "Now open the **network** tab — the `fetch` to `/todos/1` returns the tip we render.",
-      "say": "Now open the network tab. The fetch to todos one returns the tip we render.",
-      "cue": "open the network",
-      "action": {
-        "tool": "preview",
-        "steps": [
-          {
-            "cmd": "network",
-            "match": "todos"
           }
         ]
       }
@@ -173,13 +239,17 @@
   "audio": "/generated/react-usestate/audio.mp3",
   "cueTimes": [
     0,
-    4.807,
-    8.591,
-    15.418,
-    21.339,
-    24.531,
-    28.804,
-    33.738
+    6.85,
+    12.887,
+    18.274,
+    34.528,
+    37.152,
+    50.434,
+    56.123,
+    81.944,
+    96.781,
+    102.087,
+    105.918
   ],
-  "durationSeconds": 38.684
+  "durationSeconds": 113.359
 }

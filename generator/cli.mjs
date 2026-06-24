@@ -97,6 +97,7 @@ async function main() {
     accent: lesson.accent || colorForSlug(lesson.slug),
     format: args.format || lesson.format || 'video',
     poster: posterSnippet(lesson),
+    ...(lesson.series ? { series: lesson.series, seriesOrder: lesson.seriesOrder ?? 0 } : {}),
     durationSeconds: Math.round(audioEnd),
     sceneCount: lesson.scenes.length,
     href: `?lesson=${lesson.slug}`,

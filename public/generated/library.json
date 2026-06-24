@@ -1,55 +1,80 @@
 {
   "lessons": [
     {
-      "slug": "effect-basics",
-      "title": "A first Effect program",
-      "subtitle": "Describe a computation, then run it",
-      "library": "effect",
-      "persona": "devreel",
-      "accent": "#6a3f9e",
-      "format": "video",
-      "durationSeconds": 35,
-      "sceneCount": 7,
-      "href": "?lesson=effect-basics",
-      "createdAt": "2026-06-24T08:35:33.262Z",
-      "poster": {
-        "file": "/src/App.tsx",
-        "code": "import React from 'react'\nimport { Effect, pipe } from 'https://esm.sh/…\nconst program = pipe(\n  Effect.succeed(21),\n  Effect.map((n) => n * 2),\n)\nexport default function App() {"
-      }
-    },
-    {
-      "slug": "react-usestate",
-      "title": "React state with useState",
-      "subtitle": "Build a counter that also fetches data",
+      "slug": "react-useeffect",
+      "title": "useEffect",
+      "subtitle": "Run a side effect after render — fetch data",
       "library": "react",
       "persona": "devreel",
       "accent": "#38bdf8",
-      "durationSeconds": 39,
-      "sceneCount": 8,
-      "href": "?lesson=react-usestate",
-      "createdAt": "2026-06-24T08:35:26.824Z",
       "format": "video",
       "poster": {
         "file": "/src/App.jsx",
-        "code": "import React, { useEffect, useState } from 'r…\nexport default function App() {\n  const [count, setCount] = useState(0)\n  const [tip, setTip] = useState('')\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.c…\n      .then((r) => r.json())"
-      }
+        "code": "import React, { useEffect, useState } from 'r…\nexport default function App() {\n  const [tip, setTip] = useState('')\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.c…\n      .then((r) => r.json())\n      .then((d) => setTip(d.title))"
+      },
+      "series": "React Hooks",
+      "seriesOrder": 2,
+      "durationSeconds": 125,
+      "sceneCount": 17,
+      "href": "?lesson=react-useeffect",
+      "createdAt": "2026-06-24T18:54:27.325Z"
+    },
+    {
+      "slug": "react-usestate",
+      "title": "useState",
+      "subtitle": "Remember a value between renders",
+      "library": "react",
+      "persona": "devreel",
+      "accent": "#38bdf8",
+      "durationSeconds": 113,
+      "sceneCount": 12,
+      "href": "?lesson=react-usestate",
+      "createdAt": "2026-06-24T18:54:05.598Z",
+      "format": "video",
+      "poster": {
+        "file": "/src/App.jsx",
+        "code": "import React, { useState } from 'react'\nexport default function App() {\n  const [count, setCount] = useState(0)\n  return (\n    <div className=\"min-h-screen bg-slate-50 …\n      <h1 className=\"text-2xl font-bold\">Coun…\n      <button"
+      },
+      "series": "React Hooks",
+      "seriesOrder": 1
     },
     {
       "slug": "effect-node",
       "title": "Run Effect in Node",
-      "subtitle": "Write a script, run it in the console",
+      "subtitle": "A script in the console — explained line by line",
       "library": "effect",
       "persona": "devreel",
       "accent": "#6a3f9e",
       "format": "video",
-      "durationSeconds": 29,
-      "sceneCount": 5,
+      "durationSeconds": 70,
+      "sceneCount": 11,
       "href": "?lesson=effect-node",
-      "createdAt": "2026-06-24T07:58:55.970Z",
+      "createdAt": "2026-06-24T18:38:34.347Z",
       "poster": {
         "file": "/program.ts",
         "code": "import { Effect, pipe } from \"effect\"\nconst program = pipe(\n  Effect.succeed(21),\n  Effect.map((n) => n * 2),\n)\nconst result = Effect.runSync(program)\nconsole.log(\"result =\", result)"
-      }
+      },
+      "series": "Effect: a first program",
+      "seriesOrder": 2
+    },
+    {
+      "slug": "effect-basics",
+      "title": "A first Effect program",
+      "subtitle": "Describe a computation, then run it — explained line by line",
+      "library": "effect",
+      "persona": "devreel",
+      "accent": "#6a3f9e",
+      "format": "video",
+      "durationSeconds": 114,
+      "sceneCount": 16,
+      "href": "?lesson=effect-basics",
+      "createdAt": "2026-06-24T18:38:21.670Z",
+      "poster": {
+        "file": "/src/App.tsx",
+        "code": "import React from 'react'\nimport { Effect, pipe } from 'https://esm.sh/…\nconst program = pipe(\n  Effect.succeed(21),\n  Effect.map((n) => n * 2),\n)\nexport default function App() {"
+      },
+      "series": "Effect: a first program",
+      "seriesOrder": 1
     },
     {
       "slug": "devreel-tools",

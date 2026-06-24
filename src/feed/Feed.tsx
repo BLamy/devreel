@@ -17,6 +17,8 @@ export interface LibraryEntry {
   createdAt?: string
   format?: 'video' | 'reel'
   poster?: { file: string; code: string }
+  series?: string
+  seriesOrder?: number
 }
 
 function fmtDur(s?: number): string {
@@ -171,10 +173,58 @@ function LessonLoaderVertical({ slug, soundOn, onNav }: { slug: string; soundOn:
   return <Player lesson={lesson} layout="vertical" autoplay startMuted chrome="minimal" forceUnmute={soundOn} exposeNav={onNav} />
 }
 
+// A feed item is a standalone lesson or a whole series (grouped into one card).
+interface FeedItem {
+  rep: LibraryEntry // the part-1 lesson used for the thumbnail + link
+  series?: string
+  parts: number
+  totalDuration: number
+}
+
+// Group series into a single card; keep standalone lessons individual.
+function groupItems(lessons: LibraryEntry[]): FeedItem[] {
+  const items: FeedItem[] = []
+  const seen = new Set<string>()
+  for (const l of lessons) {
+    if (l.series) {
+      if (seen.has(l.series)) continue
+      seen.add(l.series)
+      const parts = lessons.filter((x) => x.series === l.series).sort((a, b) => (a.seriesOrder ?? 0) - (b.seriesOrder ?? 0))
+      items.push({ rep: parts[0], series: l.series, parts: parts.length, totalDuration: parts.reduce((s, p) => s + (p.durationSeconds ?? 0), 0) })
+    } else {
+      items.push({ rep: l, parts: 1, totalDuration: l.durationSeconds ?? 0 })
+    }
+  }
+  return items
+}
+
+function Card({ item, ratio }: { item: FeedItem; ratio: string }) {
+  const e = item.rep
+  const title = item.series ?? e.title
+  const meta = item.series
+    ? `${item.parts}-part series · ${e.library}`
+    : `${e.persona} · ${e.library}${e.sceneCount ? ` · ${e.sceneCount} scenes` : ''}`
+  return (
+    <a href={`?lesson=${e.slug}`} style={ratio === '9 / 16' ? { ...cardLink, width: 150, flex: '0 0 auto' } : cardLink}>
+      <div style={{ position: 'relative' }}>
+        <Poster entry={{ ...e, durationSeconds: item.totalDuration }} ratio={ratio} />
+        {item.series && (
+          <span style={{ position: 'absolute', top: 8, left: 8, background: 'rgba(56,189,248,0.92)', color: '#04222e', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 6 }}>
+            SERIES · {item.parts}
+          </span>
+        )}
+      </div>
+      <div style={cardTitle}>{title}</div>
+      <div style={cardMeta}>{meta}</div>
+    </a>
+  )
+}
+
 // ── Desktop: YouTube-style grid + reels rail ──────────────────────────────
 function DesktopFeed({ lessons }: { lessons: LibraryEntry[] }) {
-  const reels = lessons.filter((l) => l.format === 'reel')
-  const videos = lessons.filter((l) => l.format !== 'reel')
+  const items = groupItems(lessons)
+  const reels = items.filter((i) => i.rep.format === 'reel')
+  const videos = items.filter((i) => i.rep.format !== 'reel')
   return (
     <div style={{ minHeight: '100vh', background: '#0b1220', color: '#e2e8f0' }}>
       <header style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 24px', borderBottom: '1px solid #1e293b', position: 'sticky', top: 0, background: 'rgba(11,18,32,0.95)', backdropFilter: 'blur(6px)', zIndex: 10 }}>
@@ -188,13 +238,7 @@ function DesktopFeed({ lessons }: { lessons: LibraryEntry[] }) {
         <section style={{ padding: '20px 24px 0' }}>
           <h2 style={{ fontSize: 15, margin: '0 0 12px' }}>🎬 Reels</h2>
           <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 8 }}>
-            {reels.map((e) => (
-              <a key={e.slug} href={`?lesson=${e.slug}`} style={{ ...cardLink, width: 150, flex: '0 0 auto' }}>
-                <Poster entry={e} ratio="9 / 16" />
-                <div style={cardTitle}>{e.title}</div>
-                <div style={cardMeta}>{e.persona} · {e.library}</div>
-              </a>
-            ))}
+            {reels.map((i) => <Card key={i.rep.slug} item={i} ratio="9 / 16" />)}
           </div>
         </section>
       )}
@@ -205,13 +249,7 @@ function DesktopFeed({ lessons }: { lessons: LibraryEntry[] }) {
           <div style={{ color: '#64748b' }}>No lessons yet — run <code>/new-lesson</code> to add one.</div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 20 }}>
-            {videos.map((e) => (
-              <a key={e.slug} href={`?lesson=${e.slug}`} style={cardLink}>
-                <Poster entry={e} ratio="16 / 9" />
-                <div style={cardTitle}>{e.title}</div>
-                <div style={cardMeta}>{e.persona} · {e.library} · {e.sceneCount} scenes</div>
-              </a>
-            ))}
+            {videos.map((i) => <Card key={i.rep.slug} item={i} ratio="16 / 9" />)}
           </div>
         )}
       </section>

@@ -1,36 +1,25 @@
-// A basic Effect (effect-ts) program lesson.
-// Bake:  node generator/cli.mjs --lesson src/lessons/effect-basics.lesson.mjs
-//
-// The preview runs Effect for real, loaded from esm.sh by URL (like React/PGlite/
-// Eruda elsewhere), so the editor types real Effect code and the live preview
-// executes it. Grounded in real Effect v3 APIs: Effect.succeed, pipe, Effect.map,
-// Effect.runSync.
+// Effect basics in the browser, explained line by line. One segment typed per
+// scene; the live preview runs Effect (loaded from esm.sh by URL).
+// Bake: node generator/cli.mjs --lesson src/lessons/effect-basics.lesson.mjs
 
-const IMPORTS =
-  "import React from 'react'\n" +
-  "import { Effect, pipe } from 'https://esm.sh/effect@3'\n\n"
-
-const PROGRAM =
-  "const program = pipe(\n" +
-  "  Effect.succeed(21),\n" +
-  "  Effect.map((n) => n * 2),\n" +
-  ")\n\n"
-
-const COMPONENT =
-  "export default function App() {\n" +
-  "  const result = Effect.runSync(program)\n" +
-  "  return (\n" +
-  '    <div className="min-h-screen bg-slate-50 p-8 text-slate-900">\n' +
-  '      <h1 className="text-2xl font-bold">Effect basics</h1>\n' +
-  '      <p className="mt-2 text-slate-600">An Effect is a description. runSync executes it.</p>\n' +
-  '      <p className="mt-4 text-3xl font-bold">result = {result}</p>\n' +
-  "    </div>\n" +
-  "  )\n" +
-  "}\n"
-
-const FINAL = IMPORTS + PROGRAM + COMPONENT
-// Classic mistake: use the Effect without executing it — `program` is a
-// *description*, not the value, so nothing runs (and React can't render it).
+const seg = {
+  imports: "import React from 'react'\nimport { Effect, pipe } from 'https://esm.sh/effect@3'\n\n",
+  progOpen: 'const program = pipe(\n',
+  succeed: '  Effect.succeed(21),\n',
+  map: '  Effect.map((n) => n * 2),\n',
+  progClose: ')\n\n',
+  fnOpen: 'export default function App() {\n',
+  run: '  const result = Effect.runSync(program)\n',
+  returnOpen: '  return (\n',
+  divOpen: '    <div className="min-h-screen bg-slate-50 p-8 text-slate-900">\n',
+  h1: '      <h1 className="text-2xl font-bold">Effect basics</h1>\n',
+  p1: '      <p className="mt-2 text-slate-600">An Effect is a description. runSync executes it.</p>\n',
+  p2: '      <p className="mt-4 text-3xl font-bold">result = {result}</p>\n',
+  close: '    </div>\n  )\n}\n',
+}
+const ORDER = ['imports', 'progOpen', 'succeed', 'map', 'progClose', 'fnOpen', 'run', 'returnOpen', 'divOpen', 'h1', 'p1', 'p2', 'close']
+const FINAL = ORDER.map((k) => seg[k]).join('')
+const lineOf = (needle) => FINAL.split('\n').findIndex((l) => l.includes(needle)) + 1
 const BUGGY = FINAL.replace('const result = Effect.runSync(program)', 'const result = program')
 
 const INDEX_HTML = `<!doctype html>
@@ -47,16 +36,21 @@ import { createRoot } from 'react-dom/client'
 import App from './App.tsx'
 createRoot(document.getElementById('root')).render(<App />)
 `
+const F = '/src/App.tsx'
+const ed = (key, extra = {}) => ({ tool: 'editor', file: F, type: seg[key], ...extra })
 
 export const lesson = {
   slug: 'effect-basics',
   title: 'A first Effect program',
-  subtitle: 'Describe a computation, then run it',
+  subtitle: 'Describe a computation, then run it — explained line by line',
   library: 'effect',
   throughline: 'effect',
   persona: 'devreel',
   accent: '#6a3f9e',
   format: 'video',
+  series: 'Effect: a first program',
+  seriesOrder: 1,
+  stage: { editor: 0.56, mobileEditor: 0.56 },
   workspace: {
     files: { '/index.html': INDEX_HTML, '/src/main.tsx': MAIN_TSX, '/src/App.tsx': FINAL },
     previewPort: 3000,
@@ -65,60 +59,122 @@ export const lesson = {
   scenes: [
     {
       id: 's1', chapter: 'Intro', focus: 'editor',
-      narration: "Let's write a first **Effect** program — a typed, composable, *lazy* description of a computation.",
-      say: "Let's write a first Effect program. A typed, composable, lazy description of a computation.",
-      cue: "first Effect program",
+      narration: "Let's write a first **Effect** program — a typed, *lazy* description of a computation — and explain every line.",
+      say: "Let's write a first Effect program: a typed, lazy description of a computation. And I'll explain every line.",
+      cue: 'first Effect program',
     },
     {
       id: 's2', chapter: 'Imports', focus: 'editor',
       narration: 'Import `Effect` and `pipe` from the `effect` package.',
-      say: 'Import Effect and pipe from the effect package.',
-      cue: 'Import Effect',
-      action: { tool: 'editor', file: '/src/App.tsx', type: IMPORTS },
+      say: 'We import Effect and pipe from the effect package. Here we load it straight from a C D N so it runs in the browser.',
+      cue: 'import Effect and pipe',
+      action: ed('imports'),
     },
     {
-      id: 's3', chapter: 'Describe', focus: 'editor',
-      narration: '`Effect.succeed(21)` *describes* a success; `Effect.map` transforms its value. Nothing has run yet.',
-      say: 'Effect.succeed twenty-one describes a success. Effect.map transforms its value. Nothing has run yet.',
-      cue: 'describes a success',
-      action: {
-        tool: 'editor', file: '/src/App.tsx', type: PROGRAM,
-        callouts: [{ line: 4, text: 'a description — nothing runs yet', kind: 'tip' }],
-      },
+      id: 's3', chapter: 'pipe', focus: 'editor',
+      narration: '`pipe` feeds a value left-to-right through a series of functions.',
+      say: 'pipe is a helper that feeds a value left to right through a series of functions. Each step takes the previous result. We open it here.',
+      cue: 'feeds a value left to right',
+      action: ed('progOpen'),
     },
     {
-      id: 's4', chapter: 'Use it', focus: 'editor',
-      narration: 'Render the program in a component.',
-      say: 'Render the program in a component.',
-      cue: 'in a component',
-      action: { tool: 'editor', file: '/src/App.tsx', type: COMPONENT },
+      id: 's4', chapter: 'succeed', focus: 'editor',
+      narration: '`Effect.succeed(21)` *describes* a computation that succeeds with 21.',
+      say: 'Effect.succeed of twenty-one is our starting value. It describes a computation that immediately succeeds with twenty-one. Note: it describes — nothing has actually run.',
+      cue: 'starting value',
+      action: ed('succeed'),
     },
     {
-      id: 's5', chapter: 'A common bug', focus: 'editor',
-      narration: "A classic mistake: using `program` directly. It's only a **description** — it never runs.",
-      say: "A classic mistake: using program directly. It's only a description. It never runs.",
-      cue: 'classic mistake',
-      action: {
-        tool: 'editor', file: '/src/App.tsx', replace: BUGGY, typed: false,
-        diagnostics: [{ line: 10, message: 'An Effect is a lazy description, not a value. Execute it with Effect.runSync(program).', severity: 'error' }],
-        callouts: [{ line: 10, text: '🐛 never executed', kind: 'warn' }],
-      },
+      id: 's5', chapter: 'map', focus: 'editor',
+      narration: '`Effect.map` transforms the success value — here, doubling it.',
+      say: 'Effect.map takes the success value and transforms it. Here we double it, so twenty-one becomes forty-two. map returns a new Effect; it still has not run.',
+      cue: 'transforms it',
+      action: ed('map'),
     },
     {
-      id: 's6', chapter: 'Run it', focus: 'editor',
+      id: 's6', chapter: 'A description', focus: 'editor',
+      narration: 'Closing the pipe: `program` is just a **description** — nothing has run.',
+      say: 'We close the pipe. The result, program, is just a description of what to do. Crucially, nothing has executed yet.',
+      cue: 'close the pipe',
+      action: ed('progClose', { callouts: [{ line: lineOf('const program'), text: 'a description — nothing runs yet', kind: 'tip' }] }),
+    },
+    {
+      id: 's7', chapter: 'Component', focus: 'editor',
+      narration: 'A component to show the result.',
+      say: 'Now a small React component to display the result.',
+      cue: 'small React component',
+      action: ed('fnOpen'),
+    },
+    {
+      id: 's8', chapter: 'Run it', focus: 'editor',
       narration: '`Effect.runSync` **executes** the description and returns the value.',
-      say: 'Effect.runSync executes the description and returns the value.',
-      cue: 'executes the description',
+      say: 'Effect.runSync is what finally executes the description, synchronously, and returns the value — forty-two.',
+      cue: 'finally executes',
+      action: ed('run', { callouts: [{ line: lineOf('Effect.runSync'), text: 'runSync executes it', kind: 'tip' }] }),
+    },
+    {
+      id: 's9', chapter: 'JSX', focus: 'editor',
+      narration: 'Return the markup.',
+      say: 'And the markup we return.',
+      cue: 'the markup we return',
+      action: ed('returnOpen'),
+    },
+    {
+      id: 's10', chapter: 'Layout', focus: 'editor',
+      narration: 'A wrapper `div` styled with **Tailwind**.',
+      say: "A wrapping div styled with Tailwind. min height screen fills the viewport, b g slate fifty is a light background, p eight is padding, and text slate nine hundred is dark text.",
+      cue: 'styled with Tailwind',
+      action: ed('divOpen'),
+    },
+    {
+      id: 's11', chapter: 'Heading', focus: 'editor',
+      narration: 'A bold heading.',
+      say: 'A heading. text two x l for size, font bold for weight.',
+      cue: 'A heading',
+      action: ed('h1'),
+    },
+    {
+      id: 's12', chapter: 'Caption', focus: 'editor',
+      narration: 'A subtle caption.',
+      say: 'A caption paragraph. m t two adds a little top margin, and text slate six hundred is a muted grey.',
+      cue: 'A caption paragraph',
+      action: ed('p1'),
+    },
+    {
+      id: 's13', chapter: 'Result', focus: 'editor',
+      narration: 'The result, shown big: `text-3xl font-bold`.',
+      say: 'And the result itself, shown large with text three x l and font bold, so it stands out.',
+      cue: 'the result itself',
+      action: ed('p2'),
+    },
+    {
+      id: 's14', chapter: 'A common bug', focus: 'editor',
+      narration: 'A classic mistake: using `program` directly — it never runs.',
+      say: "Here's the classic Effect mistake. If you use program directly instead of running it, you get the description object, not the value. Effect is lazy: you must execute it.",
+      cue: 'classic Effect mistake',
       action: {
-        tool: 'editor', file: '/src/App.tsx', replace: FINAL, typed: false, reveal: [9, 11],
-        callouts: [{ line: 10, text: '✅ runSync executes it', kind: 'tip' }],
+        tool: 'editor', file: F, replace: BUGGY, typed: false,
+        reveal: [lineOf('const result') - 1, lineOf('const result') + 1],
+        diagnostics: [{ line: lineOf('const result'), message: 'An Effect is a lazy description, not a value. Execute it with Effect.runSync(program).', severity: 'error' }],
+        callouts: [{ line: lineOf('const result'), text: '🐛 never executed', kind: 'warn' }],
       },
     },
     {
-      id: 's7', chapter: 'Live', focus: 'preview',
-      narration: 'Here it is running live — `runSync` returns **42**.',
-      say: 'Here it is running live. runSync returns forty-two.',
-      cue: 'running live',
+      id: 's15', chapter: 'The fix', focus: 'editor',
+      narration: 'Wrap it back in `Effect.runSync`.',
+      say: 'The fix is to run it with Effect.runSync. Now result holds the actual number.',
+      cue: 'run it with',
+      action: {
+        tool: 'editor', file: F, replace: FINAL, typed: false,
+        reveal: [lineOf('Effect.runSync') - 1, lineOf('Effect.runSync') + 1],
+        callouts: [{ line: lineOf('Effect.runSync'), text: '✅ runSync executes it', kind: 'tip' }],
+      },
+    },
+    {
+      id: 's16', chapter: 'Live', focus: 'preview',
+      narration: 'Running live beside the code — `runSync` returns **42**.',
+      say: 'And here it runs live, right beside the code. runSync returns forty-two.',
+      cue: 'runs live',
       action: { tool: 'preview', steps: [{ cmd: 'waitFor', selector: 'h1' }] },
     },
   ],

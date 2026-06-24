@@ -30,11 +30,15 @@ export interface PlayerProps {
   exposeNav?: (nav: PlayerNav) => void
   /** When true, unmute (the feed flips this after the first user gesture). */
   forceUnmute?: boolean
+  /** Called when the lesson finishes (used to auto-advance a series). */
+  onEnded?: () => void
 }
 
 // The director: a unified clock (audio MP3 when present, else an autoplay timer)
 // drives a scene index + intra-scene progress, which puppets the focused tool.
-export function Player({ lesson, layout = 'horizontal', autoplay = true, startMuted = false, chrome = 'full', exposeNav, forceUnmute }: PlayerProps) {
+export function Player({ lesson, layout = 'horizontal', autoplay = true, startMuted = false, chrome = 'full', exposeNav, forceUnmute, onEnded }: PlayerProps) {
+  const onEndedRef = useRef(onEnded)
+  onEndedRef.current = onEnded
   // Per-scene start times + total, in ms.
   const { starts, total } = useMemo(() => {
     const n = lesson.scenes.length
@@ -106,6 +110,9 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
         a.currentTime = 0
         setClock(0)
         void a.play().catch(() => {})
+      } else if (onEndedRef.current) {
+        setPlaying(false)
+        onEndedRef.current()
       } else {
         setPlaying(false)
       }
@@ -182,12 +189,62 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
   const dbAction: DatabaseAction | null = scene?.action?.tool === 'database' ? (scene.action as DatabaseAction) : null
   const terminalAction: TerminalAction | null = scene?.action?.tool === 'terminal' ? (scene.action as TerminalAction) : null
 
-  const usesPreview = useMemo(() => lesson.scenes.some((s) => s.focus === 'preview'), [lesson])
-  const usesDiagram = useMemo(() => lesson.scenes.some((s) => s.focus === 'diagram'), [lesson])
-  const usesDb = useMemo(() => lesson.scenes.some((s) => s.focus === 'database'), [lesson])
-  const usesTerminal = useMemo(() => lesson.scenes.some((s) => s.focus === 'terminal'), [lesson])
+  const hasEditor = useMemo(() => lesson.scenes.some((s) => s.focus === 'editor'), [lesson])
+  // Output tools (everything that pairs with the code), in display priority.
+  const outputTools = useMemo<ToolKind[]>(
+    () => (['preview', 'diagram', 'database', 'terminal'] as ToolKind[]).filter((t) => lesson.scenes.some((s) => s.focus === t)),
+    [lesson],
+  )
+  // The output pane to show now: the current scene's output focus, else the most
+  // recent one (so the code+output pairing persists while editor scenes play).
+  const activeOutput = useMemo<ToolKind | null>(() => {
+    for (let i = index; i >= 0; i--) {
+      const f = lesson.scenes[i]?.focus
+      if (f && f !== 'editor' && outputTools.includes(f)) return f
+    }
+    return outputTools[0] ?? null
+  }, [index, lesson, outputTools])
 
   const vertical = layout === 'vertical'
+  // Code + output shown together (split) when the lesson has both. Stack on
+  // mobile (vertical), side-by-side on desktop. Single pane only when there's no
+  // editor (e.g. a tool tour) — minimizes full-screen swaps.
+  const split = hasEditor && outputTools.length > 0
+  const editorFrac = vertical ? lesson.stage?.mobileEditor ?? 0.6 : lesson.stage?.editor ?? 0.58
+
+  // Don't show the output while we're still writing code: keep the editor full
+  // until the first output scene, then pop the output pane in. Pre-mount one
+  // scene early so it boots behind the scenes and is ready when it appears.
+  const firstOutputIndex = useMemo(
+    () => lesson.scenes.findIndex((s) => s.focus && s.focus !== 'editor' && outputTools.includes(s.focus)),
+    [lesson, outputTools],
+  )
+  const outputMounted = split && firstOutputIndex >= 0 && index >= Math.max(0, firstOutputIndex - 1)
+  const outputShown = split && firstOutputIndex >= 0 && index >= firstOutputIndex
+
+  // Editor's current file (complete only) → hot-reloads the live preview via HMR.
+  const liveFiles = editorView && !editorView.typing ? { [editorView.file]: editorView.content } : undefined
+
+  const editorNode = (
+    <EditorPane
+      file={editorView?.file ?? 'untitled.tsx'}
+      content={editorView?.content ?? ''}
+      callouts={editorView?.callouts}
+      diagnostics={editorView?.diagnostics}
+      reveal={editorView?.reveal}
+    />
+  )
+  // All used output panes mounted persistently; shown when active.
+  const outputNodes = outputTools.map((tool) => (
+    <div key={tool} style={{ position: 'absolute', inset: 0, display: activeOutput === tool ? 'block' : 'none' }}>
+      {tool === 'preview' && <PreviewPane files={lesson.workspace.files} port={lesson.workspace.previewPort} action={previewAction} actionNonce={index} liveFiles={liveFiles} />}
+      {tool === 'diagram' && <DiagramPane lesson={lesson} sceneIndex={index} />}
+      {tool === 'database' && <DbPane schema={lesson.workspace.dbSchema} action={dbAction} actionNonce={index} />}
+      {tool === 'terminal' && <TerminalPane files={lesson.workspace.files} action={terminalAction} actionNonce={index} />}
+    </div>
+  ))
+  const ring = (active: boolean): React.CSSProperties =>
+    active ? { boxShadow: 'inset 0 0 0 2px #38bdf8' } : { opacity: 0.96 }
 
   return (
     <div
@@ -212,36 +269,50 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
         </div>
       )}
 
-      {/* Stage: focused pane (both kept mounted to preserve editor + live preview) */}
+      {/* Stage: code + output shown together (split), or a single pane. */}
       <div style={{ flex: 1, minHeight: 0, position: 'relative' }}>
-        <div style={{ position: 'absolute', inset: 0, display: focus === 'editor' ? 'block' : 'none' }}>
-          <EditorPane
-            file={editorView?.file ?? 'untitled.tsx'}
-            content={editorView?.content ?? ''}
-            callouts={editorView?.callouts}
-            diagnostics={editorView?.diagnostics}
-            reveal={editorView?.reveal}
-          />
-        </div>
-        {usesPreview && (
-          <div style={{ position: 'absolute', inset: 0, display: focus === 'preview' ? 'block' : 'none' }}>
-            <PreviewPane files={lesson.workspace.files} port={lesson.workspace.previewPort} action={previewAction} actionNonce={index} />
+        {split ? (
+          <div style={{ display: 'flex', flexDirection: vertical ? 'column' : 'row', height: '100%', width: '100%' }}>
+            <div
+              style={{
+                // Fill fully until the output is shown (a single flex item with
+                // grow<1 only fills that fraction), then share with the output.
+                flexGrow: outputShown ? editorFrac : 1,
+                flexShrink: 1,
+                flexBasis: 0,
+                minWidth: 0,
+                minHeight: 0,
+                position: 'relative',
+                transition: 'flex-grow 0.45s cubic-bezier(0.22,1,0.36,1)',
+                ...ring(focus === 'editor'),
+              }}
+            >
+              {editorNode}
+            </div>
+            {outputMounted && (
+              <div
+                style={{
+                  flexGrow: outputShown ? 1 - editorFrac : 0.0001,
+                  flexShrink: 1,
+                  flexBasis: 0,
+                  minWidth: 0,
+                  minHeight: 0,
+                  overflow: 'hidden',
+                  position: 'relative',
+                  background: '#0b1220',
+                  transition: 'flex-grow 0.45s cubic-bezier(0.22,1,0.36,1)',
+                  ...(vertical ? { borderTop: '1px solid #1e293b' } : { borderLeft: '1px solid #1e293b' }),
+                  ...ring(outputShown && focus !== 'editor'),
+                }}
+              >
+                {outputNodes}
+              </div>
+            )}
           </div>
-        )}
-        {usesDiagram && (
-          <div style={{ position: 'absolute', inset: 0, display: focus === 'diagram' ? 'block' : 'none' }}>
-            <DiagramPane lesson={lesson} sceneIndex={index} />
-          </div>
-        )}
-        {usesDb && (
-          <div style={{ position: 'absolute', inset: 0, display: focus === 'database' ? 'block' : 'none' }}>
-            <DbPane schema={lesson.workspace.dbSchema} action={dbAction} actionNonce={index} />
-          </div>
-        )}
-        {usesTerminal && (
-          <div style={{ position: 'absolute', inset: 0, display: focus === 'terminal' ? 'block' : 'none' }}>
-            <TerminalPane files={lesson.workspace.files} action={terminalAction} actionNonce={index} />
-          </div>
+        ) : hasEditor ? (
+          <div style={{ position: 'absolute', inset: 0 }}>{editorNode}</div>
+        ) : (
+          <div style={{ position: 'absolute', inset: 0 }}>{outputNodes}</div>
         )}
         {!scene?.action && (
           <div

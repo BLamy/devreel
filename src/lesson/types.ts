@@ -199,6 +199,20 @@ export interface Lesson {
   accent?: string
   /** 'video' (long, horizontal) or 'reel' (short, vertical). Default 'video'. */
   format?: 'video' | 'reel'
+  /**
+   * Stage frame sizing for the editor+output split. The number is the EDITOR's
+   * fraction (0..1); the output pane (preview/terminal/db/diagram) gets the rest.
+   * `editor` = desktop (side-by-side), `mobileEditor` = mobile (stacked). Pick
+   * values that fit the demo — e.g. a one-command terminal can be short.
+   */
+  stage?: { editor?: number; mobileEditor?: number }
+  /**
+   * Keep each lesson focused on ONE topic. When a topic needs several lessons,
+   * give them the same `series` title and an ascending `seriesOrder` — the feed
+   * groups them into one card and the watch page plays them back-to-back.
+   */
+  series?: string
+  seriesOrder?: number
   workspace: Workspace
   /** Nodes/edges for any `diagram` scenes. */
   diagram?: { nodes: DiagramNode[]; edges: DiagramEdge[] }

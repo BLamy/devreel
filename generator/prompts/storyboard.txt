@@ -9,6 +9,13 @@ package names, real exported functions, real APIs, real import paths. Never inve
 an API, option, or file that isn't in the digest or the library's real surface. If
 unsure, prefer the smallest real example you can verify from the digest.
 
+ONE TOPIC PER LESSON. Each lesson teaches exactly ONE concept. Do NOT bundle topics
+(e.g. don't teach useEffect inside a useState lesson, or routing inside a state
+lesson). If teaching something well needs more than one lesson, make a SERIES:
+give each lesson the SAME `series` title and an ascending `seriesOrder` (1, 2, 3…).
+The feed groups a series into one card and plays the parts back-to-back. Prefer a
+focused 1–3 minute lesson over a sprawling one.
+
 THE LESSON SHAPE
   {
     slug, title, subtitle, library, throughline, persona, accent,
@@ -56,13 +63,32 @@ A Scene:
   diagram:  { tool:"diagram", reveal?:[ids], highlight?:[ids], activeEdges?:[ids],
               messages?:[{from,to,label}] }                                  // needs lesson.diagram
 
-SCENE DISCIPLINE
-- 6–14 scenes. One idea per scene. Open with a one-line intro of what we'll build.
-- Teach by TYPING real code, then RUNNING it in the live preview. Include at least
-  one "common bug → fix" beat using editor diagnostics. End on the live preview (and,
-  if there are network calls or a DB, show them via Eruda / the database tool).
-- Keep `say` natural and spoken; keep `narration` tight. Don't read code aloud
-  literally — describe it.
+SCENE DISCIPLINE — be thorough, never rushed. The viewer must understand EVERY line.
+- TYPE IN SMALL PIECES: one scene per line or tiny cluster (an import, one const, one
+  chained call, one JSX element). NEVER dump a big block in a single scene.
+- EXPLAIN EVERY LINE in that scene's `say` — what it does and WHY. For any API/function,
+  say what it does: e.g. what `pipe` does (feeds a value left-to-right through
+  functions), what `Effect.map` does, what `Effect.runSync` does, what a `useEffect`
+  dependency array means. For TAILWIND classes, name the key classes and what each does
+  and why you chose it (e.g. "p-8 adds padding so it isn't cramped; rounded-lg gives
+  rounded corners; bg-indigo-600 is the button color").
+- SYNC: a scene's narration must describe exactly the code typed in that scene, so the
+  voice lines up with the writing. One scene = one small piece + its explanation.
+- Code + output appear TOGETHER (editor beside the preview/terminal/db on desktop,
+  stacked on mobile). Set `stage` frame sizes to fit the demo — e.g. a one-command
+  terminal can be short: stage: { editor: 0.62, mobileEditor: 0.72 }.
+- Include one "common bug → fix" beat (editor `diagnostics`), and END by RUNNING it:
+  a preview interaction (cursor click / open devtools network + click the request), a
+  terminal command, or a DB query.
+- `say` is SPOKEN — natural full sentences, never read symbols literally (expand them:
+  "useState of zero", "dot then", "arrow function"). `narration` is the on-screen
+  caption — short. Put a verbatim phrase from `say` in `cue` so audio aligns.
+- Prefer completeness over brevity: many short, well-explained scenes beats a few dense
+  ones. A 10–20 scene lesson is normal.
+- To build a file incrementally with consistent line numbers, define the final file as
+  ordered segments, type one segment per scene, and compute callout/diagnostic line
+  numbers from the final text (e.g. find the line containing "onClick"). See the
+  existing src/lessons/*.lesson.mjs for the pattern.
 
 After writing the file, validate it (the /new-lesson command shows how) and fix every
 error until ok:true.
