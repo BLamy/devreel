@@ -28,11 +28,13 @@ export interface PlayerProps {
   chrome?: 'full' | 'minimal'
   /** Receive imperative nav so a parent (the feed) can drive next/prev/toggle. */
   exposeNav?: (nav: PlayerNav) => void
+  /** When true, unmute (the feed flips this after the first user gesture). */
+  forceUnmute?: boolean
 }
 
 // The director: a unified clock (audio MP3 when present, else an autoplay timer)
 // drives a scene index + intra-scene progress, which puppets the focused tool.
-export function Player({ lesson, layout = 'horizontal', autoplay = true, startMuted = false, chrome = 'full', exposeNav }: PlayerProps) {
+export function Player({ lesson, layout = 'horizontal', autoplay = true, startMuted = false, chrome = 'full', exposeNav, forceUnmute }: PlayerProps) {
   // Per-scene start times + total, in ms.
   const { starts, total } = useMemo(() => {
     const n = lesson.scenes.length
@@ -121,6 +123,11 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
     if (!a) return
     a.muted = muted
   }, [muted])
+
+  // The feed flips forceUnmute once the user interacts; unmute the live audio.
+  useEffect(() => {
+    if (forceUnmute) setMuted(false)
+  }, [forceUnmute])
 
   useEffect(() => {
     const a = audioRef.current

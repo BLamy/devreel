@@ -81,13 +81,33 @@ function Poster({ entry, ratio }: { entry: LibraryEntry; ratio: string }) {
 // ── Mobile: TikTok-style vertical swipe feed ──────────────────────────────
 function MobileFeed({ lessons }: { lessons: LibraryEntry[] }) {
   const [active, setActive] = useState(0)
+  const [soundOn, setSoundOn] = useState(false)
   const navRef = useRef<PlayerNav | null>(null)
   const containerRef = useRef<HTMLDivElement | null>(null)
+
+  // Browsers block unmuted autoplay until the user interacts. TikTok-style: cards
+  // autoplay muted, then sound turns on at the first scroll/tap and stays on.
+  useEffect(() => {
+    if (soundOn) return
+    const enable = () => setSoundOn(true)
+    const opts: AddEventListenerOptions = { once: true, passive: true }
+    window.addEventListener('pointerdown', enable, opts)
+    window.addEventListener('touchstart', enable, opts)
+    window.addEventListener('wheel', enable, opts)
+    window.addEventListener('keydown', enable, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', enable)
+      window.removeEventListener('touchstart', enable)
+      window.removeEventListener('wheel', enable)
+      window.removeEventListener('keydown', enable)
+    }
+  }, [soundOn])
 
   // Deterministic active slide = the one nearest the top of the scroll viewport.
   const onScroll = () => {
     const el = containerRef.current
     if (!el || el.clientHeight === 0) return
+    if (!soundOn) setSoundOn(true)
     const i = Math.max(0, Math.min(lessons.length - 1, Math.round(el.scrollTop / el.clientHeight)))
     setActive((prev) => (prev === i ? prev : i))
   }
@@ -106,14 +126,14 @@ function MobileFeed({ lessons }: { lessons: LibraryEntry[] }) {
         >
           {i === active ? (
             <>
-              <LessonLoaderVertical slug={e.slug} onNav={(n) => (navRef.current = n)} />
+              <LessonLoaderVertical slug={e.slug} soundOn={soundOn} onNav={(n) => (navRef.current = n)} />
               {/* Tap zones: right third advances a scene, the rest toggles play. */}
               <div style={{ position: 'absolute', inset: 0, display: 'flex', zIndex: 20 }}>
-                <button aria-label="play/pause" onClick={() => navRef.current?.toggle()} style={tapZone(65)} />
-                <button aria-label="next scene" onClick={() => navRef.current?.next()} style={tapZone(35)} />
+                <button aria-label="play/pause" onClick={() => { setSoundOn(true); navRef.current?.toggle() }} style={tapZone(65)} />
+                <button aria-label="next scene" onClick={() => { setSoundOn(true); navRef.current?.next() }} style={tapZone(35)} />
               </div>
-              <div style={{ position: 'absolute', top: 10, left: 12, color: '#fff', fontSize: 12, opacity: 0.8, zIndex: 21 }}>
-                tap right ▸ next · swipe up for next video
+              <div style={{ position: 'absolute', top: 10, left: 12, color: '#fff', fontSize: 12, opacity: 0.85, zIndex: 21, textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}>
+                {soundOn ? '🔊 sound on' : '🔇 tap for sound'} · tap right ▸ next · swipe up
               </div>
             </>
           ) : (
@@ -134,7 +154,7 @@ function tapZone(pct: number): React.CSSProperties {
 }
 
 // Vertical player that also surfaces nav up to the mobile feed.
-function LessonLoaderVertical({ slug, onNav }: { slug: string; onNav: (n: PlayerNav) => void }) {
+function LessonLoaderVertical({ slug, soundOn, onNav }: { slug: string; soundOn: boolean; onNav: (n: PlayerNav) => void }) {
   const [lesson, setLesson] = useState<Lesson | null>(null)
   useEffect(() => {
     let cancelled = false
@@ -147,7 +167,8 @@ function LessonLoaderVertical({ slug, onNav }: { slug: string; onNav: (n: Player
     }
   }, [slug])
   if (!lesson) return <div style={{ height: '100%', display: 'grid', placeItems: 'center', color: '#94a3b8' }}>loading…</div>
-  return <Player lesson={lesson} layout="vertical" autoplay startMuted chrome="minimal" exposeNav={onNav} />
+  // Always start muted so autoplay is allowed; unmute once the user has interacted.
+  return <Player lesson={lesson} layout="vertical" autoplay startMuted chrome="minimal" forceUnmute={soundOn} exposeNav={onNav} />
 }
 
 // ── Desktop: YouTube-style grid + reels rail ──────────────────────────────
