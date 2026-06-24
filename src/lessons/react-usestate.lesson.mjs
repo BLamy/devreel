@@ -14,10 +14,15 @@ const FINAL = `${IMPORTS}export default function App() {
   }, [])
 
   return (
-    <div className="card">
-      <h1>useState counter</h1>
-      <button onClick={() => setCount(count + 1)}>count is {count}</button>
-      <p>{tip || 'loading…'}</p>
+    <div className="min-h-screen bg-slate-50 p-8 text-slate-900">
+      <h1 className="text-2xl font-bold">useState counter</h1>
+      <button
+        className="mt-4 rounded-lg bg-indigo-600 px-4 py-2 text-white hover:bg-indigo-500"
+        onClick={() => setCount(count + 1)}
+      >
+        count is {count}
+      </button>
+      <p className="mt-4 text-slate-600">{tip || 'loading…'}</p>
     </div>
   )
 }
@@ -81,8 +86,8 @@ export const lesson = {
       cue: 'A classic mistake',
       action: {
         tool: 'editor', file: '/src/App.jsx', replace: BUGGY, typed: false,
-        diagnostics: [{ line: 16, message: "Calling setCount during render causes 'Too many re-renders'. Wrap it in an arrow function.", severity: 'error' }],
-        callouts: [{ line: 16, text: '🐛 runs on every render', kind: 'warn' }],
+        diagnostics: [{ line: 18, message: "Calling setCount during render causes 'Too many re-renders'. Wrap it in an arrow function.", severity: 'error' }],
+        callouts: [{ line: 18, text: '🐛 runs on every render', kind: 'warn' }],
       },
     },
     {
@@ -90,7 +95,7 @@ export const lesson = {
       narration: 'Wrap it in an arrow function so it only fires **on click**.',
       say: 'Wrap it in an arrow function so it only fires on click.',
       cue: 'Wrap it in an arrow',
-      action: { tool: 'editor', file: '/src/App.jsx', replace: FINAL, typed: false, reveal: [15, 17], callouts: [{ line: 16, text: '✅ arrow = on click', kind: 'tip' }] },
+      action: { tool: 'editor', file: '/src/App.jsx', replace: FINAL, typed: false, reveal: [16, 19], callouts: [{ line: 18, text: '✅ arrow = on click', kind: 'tip' }] },
     },
     {
       id: 's6', chapter: 'Live', focus: 'preview',

@@ -49,6 +49,14 @@ export function EditorPane({ file, content, callouts = NO_CALLOUTS, diagnostics 
       minimap: { enabled: false },
       fontSize: 14,
       lineNumbers: 'on',
+      // Tight gutter: line numbers were eating a lot of width.
+      lineNumbersMinChars: 2,
+      lineDecorationsWidth: 6,
+      folding: false,
+      glyphMargin: false,
+      // Wrap long lines to the pane width so code never runs off-screen.
+      wordWrap: 'on',
+      wrappingIndent: 'indent',
       scrollBeyondLastLine: false,
       renderLineHighlight: 'none',
       theme: 'vs-dark',

@@ -280,14 +280,19 @@ const REFRESH_GUARD =
   `<script>window.$RefreshReg$=window.$RefreshReg$||function(){};` +
   `window.$RefreshSig$=window.$RefreshSig$||function(){return function(t){return t}};</script>`
 
-/** Prepare seed files: refresh guard in <head>, agent bridge before </body>. */
+// Tailwind Play CDN: makes Tailwind utility classes work in the preview with no
+// build step (it scans the DOM and watches for React-rendered nodes). So every
+// lesson app can style with Tailwind and it renders.
+const TAILWIND = `<script src="https://cdn.tailwindcss.com"></script>`
+
+/** Prepare seed files: refresh guard + Tailwind in <head>, agent bridge before </body>. */
 export function prepareSeed(files: SeedFiles): SeedFiles {
   const out = { ...files }
   let html = out['/index.html']
   if (html) {
     html = html.includes('<head>')
-      ? html.replace('<head>', `<head>${REFRESH_GUARD}`)
-      : REFRESH_GUARD + html
+      ? html.replace('<head>', `<head>${REFRESH_GUARD}${TAILWIND}`)
+      : REFRESH_GUARD + TAILWIND + html
     html = html.includes('</body>')
       ? html.replace('</body>', `${AGENT_BRIDGE}\n</body>`)
       : html + AGENT_BRIDGE

@@ -20,10 +20,10 @@ const COMPONENT =
   "export default function App() {\n" +
   "  const result = Effect.runSync(program)\n" +
   "  return (\n" +
-  "    <div style={{ fontFamily: 'system-ui', padding: 24, color: '#0f172a' }}>\n" +
-  "      <h1>Effect basics</h1>\n" +
-  "      <p>An Effect is a description. runSync executes it.</p>\n" +
-  "      <p style={{ fontSize: 32, fontWeight: 700 }}>result = {result}</p>\n" +
+  '    <div className="min-h-screen bg-slate-50 p-8 text-slate-900">\n' +
+  '      <h1 className="text-2xl font-bold">Effect basics</h1>\n' +
+  '      <p className="mt-2 text-slate-600">An Effect is a description. runSync executes it.</p>\n' +
+  '      <p className="mt-4 text-3xl font-bold">result = {result}</p>\n' +
   "    </div>\n" +
   "  )\n" +
   "}\n"

@@ -84,6 +84,8 @@ export default defineConfig({
   },
   server: {
     headers: crossOriginIsolation,
+    // Allow tunneled hosts (ngrok, etc.) to reach the dev server.
+    allowedHosts: true,
   },
   preview: {
     headers: crossOriginIsolation,
