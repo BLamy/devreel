@@ -1,6 +1,19 @@
 {
   "lessons": [
     {
+      "slug": "effect-node",
+      "title": "Run Effect in Node",
+      "subtitle": "Write a script, run it in the console",
+      "library": "effect",
+      "persona": "devreel",
+      "accent": "#6a3f9e",
+      "format": "video",
+      "durationSeconds": 29,
+      "sceneCount": 5,
+      "href": "?lesson=effect-node",
+      "createdAt": "2026-06-24T07:58:55.970Z"
+    },
+    {
       "slug": "effect-basics",
       "title": "A first Effect program",
       "subtitle": "Describe a computation, then run it",
