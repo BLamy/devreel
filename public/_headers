@@ -1,0 +1,12 @@
+# Cross-origin isolation for almostnode (service worker + WASM + the
+# /__virtual__ preview proxy). Cloudflare Workers static assets honor _headers.
+/*
+  Cross-Origin-Embedder-Policy: credentialless
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: cross-origin
+
+# The service worker must be served as JS and uncached so updates land.
+/__sw__.js
+  Content-Type: application/javascript
+  Cache-Control: no-cache
+  Service-Worker-Allowed: /

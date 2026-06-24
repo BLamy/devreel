@@ -1,0 +1,14 @@
+{
+  // Cloudflare Workers static-assets deploy for devreel.
+  // Prod:    `npm run cf:deploy`   (wrangler deploy)          -> https://devreel.<subdomain>.workers.dev
+  // Preview: `npm run cf:preview`  (wrangler versions upload) -> a per-version *.workers.dev URL
+  //
+  // Cross-origin isolation (required by almostnode) is set via public/_headers,
+  // which Workers static assets serve. SPA fallback handles ?lesson= routing.
+  "name": "devreel",
+  "compatibility_date": "2026-06-24",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application"
+  }
+}

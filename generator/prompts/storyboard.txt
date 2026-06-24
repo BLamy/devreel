@@ -1,0 +1,64 @@
+You are authoring a devreel LESSON: a short "simulated video" that teaches how to
+use a library by puppeting a real in-browser dev environment (almostnode) on a
+voiceover-synced timeline. You write ONE JavaScript module, `<slug>.lesson.mjs`,
+that does `export const lesson = { ... }`. Plain JS (use backtick template
+strings for code files). No types, no imports.
+
+GROUND EVERYTHING IN REAL CODE. Use the repo/library digest you were given: real
+package names, real exported functions, real APIs, real import paths. Never invent
+an API, option, or file that isn't in the digest or the library's real surface. If
+unsure, prefer the smallest real example you can verify from the digest.
+
+THE LESSON SHAPE
+  {
+    slug, title, subtitle, library, throughline, persona, accent,
+    workspace: { files: { "/index.html": "...", "/src/App.jsx": "...", ... },
+                 install?: ["pkg", ...], previewPort?: 3000, previewMode?: "react",
+                 dbSchema?: "CREATE TABLE ..." },
+    diagram?: { nodes: [{id,label,kind}], edges: [{id,from,to,label}] },
+    scenes: [ Scene, ... ]
+  }
+
+- workspace.files is the FINAL, runnable project (what the preview executes). React
+  + react-dom need no install (esbuild transform + import map). Any OTHER npm
+  dependency the code imports MUST be listed in workspace.install.
+- index.html should load /src/main.jsx which renders the app.
+
+A Scene:
+  { id, chapter?, title?, narration, say?, cue?, focus, action? }
+- focus is the tool in the spotlight: "editor" | "preview" | "terminal" | "database" | "diagram".
+- narration: the on-screen caption. Supports **bold**, *italic*, `code`.
+- say: OPTIONAL clean spoken line (overrides narration for TTS). Use it whenever the
+  narration contains code/symbols so the voice reads naturally (no slashes, braces,
+  camelCase spelled out). Keep it conversational, one or two sentences.
+- cue: OPTIONAL — a short verbatim phrase from `say` to anchor this scene to the
+  audio, or an absolute number of seconds. If omitted, scenes are spaced evenly.
+- action.tool MUST equal focus. Actions:
+  editor:   { tool:"editor", file:"/src/App.jsx", type:"...new text to TYPE...",
+              replace:"...whole new file...", typed?:true, reveal?:[startLine,endLine],
+              callouts?:[{line, text, kind?:"info"|"tip"|"warn"}],
+              diagnostics?:[{line, column?, endColumn?, message, severity?:"error"|"warning"|"info"}] }
+            • Editor files start EMPTY and are built up by each scene's `type`. The
+              concatenation of all `type`/`replace` for a file MUST equal
+              workspace.files[file] by the end.
+            • Show a REAL common mistake with `replace` (the buggy file) + a
+              `diagnostics` marker whose `line` matches the buggy line, then a later
+              scene `replace`s the corrected file. Diagnostic messages should be the
+              actual error a dev would see.
+  preview:  { tool:"preview", navigate?:"/", click?:"<css selector>", openEruda?:"network"|"console",
+              focusNetwork?:"<url substring>" }
+  terminal: { tool:"terminal", run:"npm test", expect?:"<substring of output>" }
+  database: { tool:"database", query:"SELECT ...", highlight?:"<column>" }   // needs workspace.dbSchema
+  diagram:  { tool:"diagram", reveal?:[ids], highlight?:[ids], activeEdges?:[ids],
+              messages?:[{from,to,label}] }                                  // needs lesson.diagram
+
+SCENE DISCIPLINE
+- 6–14 scenes. One idea per scene. Open with a one-line intro of what we'll build.
+- Teach by TYPING real code, then RUNNING it in the live preview. Include at least
+  one "common bug → fix" beat using editor diagnostics. End on the live preview (and,
+  if there are network calls or a DB, show them via Eruda / the database tool).
+- Keep `say` natural and spoken; keep `narration` tight. Don't read code aloud
+  literally — describe it.
+
+After writing the file, validate it (the /new-lesson command shows how) and fix every
+error until ok:true.

@@ -1,0 +1,30 @@
+{
+  "lessons": [
+    {
+      "slug": "react-usestate",
+      "title": "React state with useState",
+      "subtitle": "Build a counter that also fetches data",
+      "library": "react",
+      "persona": "devreel",
+      "accent": "#38bdf8",
+      "durationSeconds": 38,
+      "sceneCount": 8,
+      "href": "?lesson=react-usestate",
+      "createdAt": "2026-06-24T04:51:17.144Z",
+      "format": "video"
+    },
+    {
+      "slug": "devreel-tools",
+      "title": "The devreel toolbox",
+      "subtitle": "diagram · database · terminal",
+      "library": "devreel",
+      "persona": "devreel",
+      "accent": "#34d399",
+      "format": "reel",
+      "durationSeconds": 19,
+      "sceneCount": 4,
+      "href": "?lesson=devreel-tools",
+      "createdAt": "2026-06-24T03:51:49.958Z"
+    }
+  ]
+}

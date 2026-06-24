@@ -1,0 +1,40 @@
+{
+  "name": "devreel",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Tech-teacher influencer simulated-video bookshelf: real almostnode workspaces puppeted on a voiceover-synced timeline.",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc -b --noEmit",
+    "explain": "node generator/cli.mjs",
+    "cf:deploy": "wrangler deploy",
+    "cf:preview": "wrangler versions upload"
+  },
+  "dependencies": {
+    "@electric-sql/pglite": "^0.2.17",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/xterm": "^5.5.0",
+    "almostnode": "^0.2.14",
+    "d3": "^7.9.0",
+    "monaco-editor": "^0.52.2",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@elevenlabs/elevenlabs-js": "^2.3.0",
+    "@types/d3": "^7.4.3",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "dotenv": "^16.4.5",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.11",
+    "vite-plugin-node-polyfills": "^0.22.0",
+    "vite-plugin-top-level-await": "^1.4.4",
+    "vite-plugin-wasm": "^3.3.0",
+    "wrangler": "^4.103.0"
+  }
+}

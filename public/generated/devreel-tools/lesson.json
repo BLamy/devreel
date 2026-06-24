@@ -1,0 +1,140 @@
+{
+  "slug": "devreel-tools",
+  "title": "The devreel toolbox",
+  "subtitle": "diagram · database · terminal",
+  "library": "devreel",
+  "throughline": "tools",
+  "persona": "devreel",
+  "accent": "#34d399",
+  "format": "reel",
+  "workspace": {
+    "files": {
+      "/answer.js": "const answer = 6 * 7\nconsole.log('the answer is ' + answer)\n"
+    },
+    "dbSchema": "CREATE TABLE todos (id serial primary key, title text, done boolean default false); INSERT INTO todos (title, done) VALUES ('Learn devreel', true), ('Ship M2', false), ('Record a reel', false);",
+    "previewPort": 3000
+  },
+  "diagram": {
+    "nodes": [
+      {
+        "id": "client",
+        "label": "Browser",
+        "kind": "client",
+        "x": 18,
+        "y": 50
+      },
+      {
+        "id": "api",
+        "label": "API",
+        "kind": "service",
+        "x": 50,
+        "y": 50
+      },
+      {
+        "id": "db",
+        "label": "Postgres",
+        "kind": "database",
+        "sublabel": "PGlite",
+        "x": 82,
+        "y": 50
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": "client",
+        "to": "api",
+        "label": "HTTP"
+      },
+      {
+        "id": "e2",
+        "from": "api",
+        "to": "db",
+        "label": "SQL"
+      }
+    ]
+  },
+  "scenes": [
+    {
+      "id": "d1",
+      "chapter": "Architecture",
+      "focus": "diagram",
+      "narration": "devreel keeps the **architecture view** — the browser talks to an API.",
+      "say": "devreel keeps the architecture view. The browser talks to an A P I.",
+      "cue": "devreel keeps",
+      "action": {
+        "tool": "diagram",
+        "reveal": [
+          "client",
+          "api"
+        ],
+        "messages": [
+          {
+            "from": "client",
+            "to": "api",
+            "label": "GET /todos",
+            "kind": "request"
+          }
+        ]
+      }
+    },
+    {
+      "id": "d2",
+      "chapter": "Architecture",
+      "focus": "diagram",
+      "narration": "The API queries **Postgres**, running fully in the browser via PGlite.",
+      "say": "The A P I queries Postgres, running fully in the browser via PGlite.",
+      "cue": "queries Postgres",
+      "action": {
+        "tool": "diagram",
+        "reveal": [
+          "db"
+        ],
+        "highlight": [
+          "db"
+        ],
+        "messages": [
+          {
+            "from": "api",
+            "to": "db",
+            "label": "SQL",
+            "kind": "data"
+          }
+        ]
+      }
+    },
+    {
+      "id": "db1",
+      "chapter": "Database",
+      "focus": "database",
+      "narration": "Here are the rows that query returns — a **real** table, queried live.",
+      "say": "Here are the rows that query returns. A real table, queried live.",
+      "cue": "the rows that query returns",
+      "action": {
+        "tool": "database",
+        "query": "SELECT id, title, done FROM todos ORDER BY id;",
+        "highlight": "done"
+      }
+    },
+    {
+      "id": "t1",
+      "chapter": "Terminal",
+      "focus": "terminal",
+      "narration": "And a real **terminal** — it runs `node answer.js` for real.",
+      "say": "And a real terminal. It runs node answer dot js for real.",
+      "cue": "a real terminal",
+      "action": {
+        "tool": "terminal",
+        "run": "node answer.js"
+      }
+    }
+  ],
+  "audio": "/generated/devreel-tools/audio.mp3",
+  "cueTimes": [
+    0,
+    4.226,
+    8.975,
+    13.746
+  ],
+  "durationSeconds": 18.901
+}
