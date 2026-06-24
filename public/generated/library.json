@@ -11,7 +11,11 @@
       "durationSeconds": 29,
       "sceneCount": 5,
       "href": "?lesson=effect-node",
-      "createdAt": "2026-06-24T07:58:55.970Z"
+      "createdAt": "2026-06-24T07:58:55.970Z",
+      "poster": {
+        "file": "/program.ts",
+        "code": "import { Effect, pipe } from \"effect\"\nconst program = pipe(\n  Effect.succeed(21),\n  Effect.map((n) => n * 2),\n)\nconst result = Effect.runSync(program)\nconsole.log(\"result =\", result)"
+      }
     },
     {
       "slug": "effect-basics",
@@ -24,7 +28,11 @@
       "durationSeconds": 33,
       "sceneCount": 7,
       "href": "?lesson=effect-basics",
-      "createdAt": "2026-06-24T07:50:25.799Z"
+      "createdAt": "2026-06-24T07:50:25.799Z",
+      "poster": {
+        "file": "/src/App.tsx",
+        "code": "import React from 'react'\nimport { Effect, pipe } from 'https://esm.sh/…\nconst program = pipe(\n  Effect.succeed(21),\n  Effect.map((n) => n * 2),\n)\nexport default function App() {"
+      }
     },
     {
       "slug": "react-usestate",
@@ -37,7 +45,11 @@
       "sceneCount": 8,
       "href": "?lesson=react-usestate",
       "createdAt": "2026-06-24T04:51:17.144Z",
-      "format": "video"
+      "format": "video",
+      "poster": {
+        "file": "/src/App.jsx",
+        "code": "import React, { useEffect, useState } from 'r…\nexport default function App() {\n  const [count, setCount] = useState(0)\n  const [tip, setTip] = useState('')\n  useEffect(() => {\n    fetch('https://jsonplaceholder.typicode.c…\n      .then((r) => r.json())"
+      }
     },
     {
       "slug": "devreel-tools",
@@ -50,7 +62,11 @@
       "durationSeconds": 19,
       "sceneCount": 4,
       "href": "?lesson=devreel-tools",
-      "createdAt": "2026-06-24T03:51:49.958Z"
+      "createdAt": "2026-06-24T03:51:49.958Z",
+      "poster": {
+        "file": "/answer.js",
+        "code": "const answer = 6 * 7\nconsole.log('the answer is ' + answer)"
+      }
     }
   ]
 }

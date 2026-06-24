@@ -81,6 +81,7 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
       setClock((c) => {
         const next = c + dt
         if (next >= total) {
+          if (chrome === 'minimal') return 0 // loop in the feed
           setPlaying(false)
           return total
         }
@@ -97,7 +98,16 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
     const a = audioRef.current
     if (!a) return
     const onTime = () => setClock(a.currentTime * 1000)
-    const onEnd = () => setPlaying(false)
+    const onEnd = () => {
+      if (chrome === 'minimal') {
+        // Loop the card like a short-form feed video.
+        a.currentTime = 0
+        setClock(0)
+        void a.play().catch(() => {})
+      } else {
+        setPlaying(false)
+      }
+    }
     a.addEventListener('timeupdate', onTime)
     a.addEventListener('ended', onEnd)
     return () => {
@@ -115,10 +125,27 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
   useEffect(() => {
     const a = audioRef.current
     if (!a) return
-    // If the browser blocks unmuted autoplay, fall back to paused so the
-    // play-with-sound overlay shows (a click is a trusted gesture).
-    if (playing) a.play().catch(() => setPlaying(false))
-    else a.pause()
+    if (!playing) {
+      a.pause()
+      return
+    }
+    // Resilient autoplay: play() can transiently reject if it races the audio
+    // load or a remount, so retry on `canplay`. Only surrender (to show the
+    // play-with-sound gesture overlay) when we actually need sound — a muted
+    // feed card should keep trying rather than get stuck.
+    let cancelled = false
+    const attempt = () => {
+      if (cancelled) return
+      a.play().catch(() => {
+        if (!a.muted) setPlaying(false)
+      })
+    }
+    attempt()
+    a.addEventListener('canplay', attempt)
+    return () => {
+      cancelled = true
+      a.removeEventListener('canplay', attempt)
+    }
   }, [playing])
 
   // Show a play overlay only when audio hasn't started and we're not playing.
@@ -207,6 +234,24 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
         {usesTerminal && (
           <div style={{ position: 'absolute', inset: 0, display: focus === 'terminal' ? 'block' : 'none' }}>
             <TerminalPane files={lesson.workspace.files} action={terminalAction} actionNonce={index} />
+          </div>
+        )}
+        {!scene?.action && (
+          <div
+            style={{
+              position: 'absolute', inset: 0, display: 'grid', placeItems: 'center', textAlign: 'center',
+              padding: 32, zIndex: 4,
+              background: `linear-gradient(135deg, ${lesson.accent || '#1f6fb2'} 0%, #0b1220 82%)`,
+            }}
+          >
+            <div>
+              {scene?.chapter && (
+                <div style={{ textTransform: 'uppercase', letterSpacing: 2, fontSize: 11, color: 'rgba(255,255,255,0.85)', marginBottom: 10 }}>{scene.chapter}</div>
+              )}
+              <div style={{ fontSize: vertical ? 30 : 42, fontWeight: 800, color: '#fff', lineHeight: 1.15 }}>{lesson.title}</div>
+              {lesson.subtitle && <div style={{ opacity: 0.85, marginTop: 10, fontSize: vertical ? 15 : 17, color: '#e2e8f0' }}>{lesson.subtitle}</div>}
+              <div style={{ marginTop: 16, fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>{lesson.library} · {lesson.persona}</div>
+            </div>
           </div>
         )}
         {needsGesture && chrome === 'full' && (

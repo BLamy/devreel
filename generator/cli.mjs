@@ -12,7 +12,7 @@ import { config as loadEnv } from 'dotenv';
 import { validateLesson } from './validate.mjs';
 import { speechify } from './speech.mjs';
 import { synthesizeLesson } from './tts.mjs';
-import { upsertLesson, colorForSlug } from './library.mjs';
+import { upsertLesson, colorForSlug, posterSnippet } from './library.mjs';
 
 loadEnv();
 
@@ -96,6 +96,7 @@ async function main() {
     persona: lesson.persona || 'devreel',
     accent: lesson.accent || colorForSlug(lesson.slug),
     format: args.format || lesson.format || 'video',
+    poster: posterSnippet(lesson),
     durationSeconds: Math.round(audioEnd),
     sceneCount: lesson.scenes.length,
     href: `?lesson=${lesson.slug}`,

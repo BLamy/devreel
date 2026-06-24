@@ -16,6 +16,7 @@ export interface LibraryEntry {
   href?: string
   createdAt?: string
   format?: 'video' | 'reel'
+  poster?: { file: string; code: string }
 }
 
 function fmtDur(s?: number): string {
@@ -25,30 +26,54 @@ function fmtDur(s?: number): string {
   return `${m}:${String(sec).padStart(2, '0')}`
 }
 
+// A code-tutorial thumbnail: accent backdrop + a snippet of the lesson's code.
+// The lesson title is rendered by the card below the poster (YouTube-style).
 function Poster({ entry, ratio }: { entry: LibraryEntry; ratio: string }) {
   const accent = entry.accent || '#1f6fb2'
+  const p = entry.poster
+  const small = ratio === '9 / 16'
   return (
     <div
       style={{
         aspectRatio: ratio,
-        background: `linear-gradient(135deg, ${accent} 0%, #0b1220 85%)`,
+        background: `linear-gradient(135deg, ${accent} 0%, #0b1220 92%)`,
         borderRadius: 12,
         position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        justifyContent: 'flex-end',
-        padding: 14,
-        color: '#fff',
         overflow: 'hidden',
       }}
     >
-      <div style={{ position: 'absolute', top: 10, left: 12, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1, opacity: 0.85, fontWeight: 600 }}>
-        {entry.library}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 10px' }}>
+        <span style={{ textTransform: 'uppercase', letterSpacing: 1, fontWeight: 700, fontSize: 10, color: '#fff' }}>{entry.library}</span>
+        {p?.file && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: 'rgba(255,255,255,0.78)' }}>{p.file.replace(/^\//, '')}</span>}
       </div>
-      <div style={{ position: 'absolute', bottom: 10, right: 10, background: 'rgba(0,0,0,0.6)', borderRadius: 6, padding: '2px 6px', fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>
+      {p?.code ? (
+        <pre
+          style={{
+            margin: '0 10px 10px',
+            flex: 1,
+            minHeight: 0,
+            overflow: 'hidden',
+            background: 'rgba(2,6,23,0.62)',
+            border: '1px solid rgba(255,255,255,0.14)',
+            borderRadius: 8,
+            padding: '8px 10px',
+            fontFamily: 'ui-monospace, SFMono-Regular, monospace',
+            fontSize: small ? 8.5 : 10.5,
+            lineHeight: 1.5,
+            color: '#d8e2f0',
+            whiteSpace: 'pre',
+          }}
+        >
+          {p.code}
+        </pre>
+      ) : (
+        <div style={{ flex: 1 }} />
+      )}
+      <div style={{ position: 'absolute', bottom: 8, right: 8, background: 'rgba(0,0,0,0.72)', borderRadius: 6, padding: '2px 6px', fontSize: 11, color: '#fff', fontVariantNumeric: 'tabular-nums' }}>
         {fmtDur(entry.durationSeconds)}
       </div>
-      <div style={{ fontSize: ratio === '9 / 16' ? 17 : 20, fontWeight: 700, lineHeight: 1.2 }}>{entry.title}</div>
     </div>
   )
 }
@@ -57,30 +82,26 @@ function Poster({ entry, ratio }: { entry: LibraryEntry; ratio: string }) {
 function MobileFeed({ lessons }: { lessons: LibraryEntry[] }) {
   const [active, setActive] = useState(0)
   const navRef = useRef<PlayerNav | null>(null)
-  const slideRefs = useRef<(HTMLDivElement | null)[]>([])
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    const io = new IntersectionObserver(
-      (entries) => {
-        for (const e of entries) {
-          if (e.isIntersecting && e.intersectionRatio > 0.6) {
-            const i = slideRefs.current.findIndex((el) => el === e.target)
-            if (i >= 0) setActive(i)
-          }
-        }
-      },
-      { threshold: [0.6] },
-    )
-    slideRefs.current.forEach((el) => el && io.observe(el))
-    return () => io.disconnect()
-  }, [lessons.length])
+  // Deterministic active slide = the one nearest the top of the scroll viewport.
+  const onScroll = () => {
+    const el = containerRef.current
+    if (!el || el.clientHeight === 0) return
+    const i = Math.max(0, Math.min(lessons.length - 1, Math.round(el.scrollTop / el.clientHeight)))
+    setActive((prev) => (prev === i ? prev : i))
+  }
 
   return (
-    <div style={{ height: '100dvh', width: '100vw', overflowY: 'scroll', scrollSnapType: 'y mandatory', background: '#000' }}>
+    <div
+      ref={containerRef}
+      onScroll={onScroll}
+      className="devreel-feed"
+      style={{ height: '100dvh', width: '100vw', overflowY: 'scroll', scrollSnapType: 'y mandatory', background: '#000' }}
+    >
       {lessons.map((e, i) => (
         <div
           key={e.slug}
-          ref={(el) => (slideRefs.current[i] = el)}
           style={{ height: '100dvh', width: '100%', scrollSnapAlign: 'start', position: 'relative', background: '#0b1220' }}
         >
           {i === active ? (
