@@ -23,6 +23,10 @@ THE LESSON SHAPE
   + react-dom need no install (esbuild transform + import map). Any OTHER npm
   dependency the code imports MUST be listed in workspace.install.
 - index.html should load /src/main.jsx which renders the app.
+- STYLE WITH TAILWIND: the preview auto-includes the Tailwind Play CDN, so style
+  apps with Tailwind utility classes (className="...") — they render with no setup.
+  Prefer Tailwind over inline styles. Keep className lines reasonable; the editor
+  wraps long lines.
 
 A Scene:
   { id, chapter?, title?, narration, say?, cue?, focus, action? }
