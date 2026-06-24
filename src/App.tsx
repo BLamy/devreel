@@ -4,6 +4,7 @@ import { LessonLoader } from './runtime/LessonLoader'
 import { Feed } from './feed/Feed'
 import { sampleLesson } from './lessons/sample'
 import { toolsDemo } from './lessons/toolsDemo'
+import { lesson as effectLesson } from './lessons/effect-basics.lesson.mjs'
 
 // Routing:
 //   default             → the feed homepage (YouTube grid / TikTok swipe)
@@ -17,6 +18,7 @@ export default function App() {
   if (params.has('probe')) return <BootProbe />
   if (params.get('sample') === 'tools') return <Player lesson={toolsDemo} layout={layout} />
   if (params.get('sample') === 'basic') return <Player lesson={sampleLesson} layout={layout} />
+  if (params.get('sample') === 'effect') return <Player lesson={effectLesson} layout={layout} />
   const slug = params.get('lesson')
   if (slug) return <LessonLoader slug={slug} layout={layout} />
   return <Feed />

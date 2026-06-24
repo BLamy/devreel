@@ -1,6 +1,19 @@
 {
   "lessons": [
     {
+      "slug": "effect-basics",
+      "title": "A first Effect program",
+      "subtitle": "Describe a computation, then run it",
+      "library": "effect",
+      "persona": "devreel",
+      "accent": "#6a3f9e",
+      "format": "video",
+      "durationSeconds": 33,
+      "sceneCount": 7,
+      "href": "?lesson=effect-basics",
+      "createdAt": "2026-06-24T07:50:25.799Z"
+    },
+    {
       "slug": "react-usestate",
       "title": "React state with useState",
       "subtitle": "Build a counter that also fetches data",
