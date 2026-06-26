@@ -1,0 +1,139 @@
+{
+  "slug": "dd-02-collection-core",
+  "title": "The Collection type",
+  "subtitle": "A multiset keyed by value",
+  "library": "effect",
+  "throughline": "differential dataflow",
+  "persona": "devreel",
+  "accent": "#a21caf",
+  "format": "video",
+  "series": "Differential Dataflow in Effect",
+  "seriesOrder": 2,
+  "editorSeed": {},
+  "editorDefaultFile": "/src/collection.ts",
+  "workspace": {
+    "files": {
+      "/src/collection.ts": "const keyOf = (value) => JSON.stringify(value)\n\nfunction bump(m, value, delta) {\n  const k = keyOf(value)\n  const existing = m.get(k)\n  m.set(k, [value, (existing ? existing[1] : 0) + delta])\n}\n\nfunction consolidate(m) {\n  for (const [k, [, count]] of m) if (count === 0) m.delete(k)\n  return m\n}\n\nexport class Collection {\n  constructor(inner) {\n    this.inner = inner\n  }\n\n  static empty() {\n    return new Collection(new Map())\n  }\n\n  static fromArray(items) {\n    const m = new Map()\n    for (const x of items) bump(m, x, 1)\n    return new Collection(consolidate(m))\n  }\n\n  static fromEntries(entries) {\n    const m = new Map()\n    for (const [value, mult] of entries) bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n  entries() {\n    return [...this.inner.values()].filter(([, count]) => count !== 0)\n  }\n",
+      "/package.json": "{\n  \"name\": \"diff-dataflow\",\n  \"type\": \"module\"\n}\n"
+    },
+    "previewPort": 3000
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "chapter": "Keying",
+      "focus": "editor",
+      "narration": "Values can be objects, so we key the multiset by a stable string — `JSON.stringify`.",
+      "say": "We will store the multiset in a Map, but values can be objects, and objects are compared by reference. So we need a stable string key. keyOf turns any value into its JSON string, so two equal records map to the same key.",
+      "cue": "a stable string key",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "const keyOf = (value) => JSON.stringify(value)\n\n"
+      }
+    },
+    {
+      "id": "s2",
+      "chapter": "bump",
+      "focus": "editor",
+      "narration": "`bump` adds `delta` to a value’s count in a map (creating it at 0 first).",
+      "say": "Next, a helper called bump. Given a map, a value, and a delta, it looks up the value's current entry by key, defaults the count to zero if it is missing, and stores the value together with its count plus the delta. This is how we add or subtract multiplicities in one place.",
+      "cue": "a helper called bump",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "function bump(m, value, delta) {\n  const k = keyOf(value)\n  const existing = m.get(k)\n  m.set(k, [value, (existing ? existing[1] : 0) + delta])\n}\n\n"
+      }
+    },
+    {
+      "id": "s3",
+      "chapter": "consolidate",
+      "focus": "editor",
+      "narration": "`consolidate` drops any value whose count reached **0** — an empty entry isn’t there at all.",
+      "say": "Then consolidate. After arithmetic, some counts land on zero, and a zero count means the value is simply not present. So consolidate walks the map and deletes every entry whose count is zero. We will call this after every operation to keep collections tidy.",
+      "cue": "drops any value whose count",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "function consolidate(m) {\n  for (const [k, [, count]] of m) if (count === 0) m.delete(k)\n  return m\n}\n\n"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "The class",
+      "focus": "editor",
+      "narration": "A `Collection` just wraps that inner map. It’s **immutable** — every operation returns a new one.",
+      "say": "Now the Collection class itself. It simply wraps the inner map. The constructor stores it. Notice the design: collections are immutable. Every operation will return a brand new Collection rather than mutating in place, which keeps diffs predictable.",
+      "cue": "wraps that inner map",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "export class Collection {\n  constructor(inner) {\n    this.inner = inner\n  }\n\n"
+      }
+    },
+    {
+      "id": "s5",
+      "chapter": "empty",
+      "focus": "editor",
+      "narration": "`Collection.empty()` — the starting point, an empty map.",
+      "say": "A static empty factory returns a Collection wrapping a fresh empty map. This is our identity value, the starting point we fold changes into.",
+      "cue": "static empty factory",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "  static empty() {\n    return new Collection(new Map())\n  }\n\n"
+      }
+    },
+    {
+      "id": "s6",
+      "chapter": "fromArray",
+      "focus": "editor",
+      "narration": "`fromArray` counts each item once — duplicates become higher multiplicities.",
+      "say": "fromArray builds a collection from a plain array. We make a map, then for each item we bump its count by one. Duplicates naturally fold into a higher multiplicity. Finally we consolidate and wrap it. That is how three apples becomes apple times three.",
+      "cue": "builds a collection from a plain array",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "  static fromArray(items) {\n    const m = new Map()\n    for (const x of items) bump(m, x, 1)\n    return new Collection(consolidate(m))\n  }\n\n"
+      }
+    },
+    {
+      "id": "s7",
+      "chapter": "fromEntries",
+      "focus": "editor",
+      "narration": "`fromEntries` takes explicit `[value, count]` pairs — perfect for writing **diffs** by hand.",
+      "say": "fromEntries is similar but takes explicit value and multiplicity pairs. We bump each value by its given count. This one is how we will hand-write diffs in our tests, including negative counts for retractions.",
+      "cue": "explicit value and multiplicity pairs",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "  static fromEntries(entries) {\n    const m = new Map()\n    for (const [value, mult] of entries) bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n"
+      }
+    },
+    {
+      "id": "s8",
+      "chapter": "entries",
+      "focus": "editor",
+      "narration": "And `entries()` reads back the non-zero `[value, count]` pairs. More methods next part.",
+      "say": "Finally for now, entries reads the contents back out: the values of the inner map, filtered to drop anything that is somehow zero. Notice we have left the class open — in the next part we add the operations that actually transform collections.",
+      "cue": "reads the contents back out",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "  entries() {\n    return [...this.inner.values()].filter(([, count]) => count !== 0)\n  }\n"
+      }
+    }
+  ],
+  "audio": "/generated/dd-02-collection-core/audio.mp3",
+  "cueTimes": [
+    0,
+    15.755,
+    32.543,
+    49.958,
+    66.328,
+    75.384,
+    93.345,
+    106.464
+  ],
+  "durationSeconds": 121.348
+}

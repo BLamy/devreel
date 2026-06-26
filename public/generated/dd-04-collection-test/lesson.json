@@ -1,0 +1,118 @@
+{
+  "slug": "dd-04-collection-test",
+  "title": "Test it in the terminal",
+  "subtitle": "A real multi-file run",
+  "library": "effect",
+  "throughline": "differential dataflow",
+  "persona": "devreel",
+  "accent": "#a21caf",
+  "format": "video",
+  "series": "Differential Dataflow in Effect",
+  "seriesOrder": 4,
+  "stage": {
+    "editor": 0.64,
+    "mobileEditor": 0.6
+  },
+  "editorSeed": {
+    "/src/collection.ts": "const keyOf = (value) => JSON.stringify(value)\n\nfunction bump(m, value, delta) {\n  const k = keyOf(value)\n  const existing = m.get(k)\n  m.set(k, [value, (existing ? existing[1] : 0) + delta])\n}\n\nfunction consolidate(m) {\n  for (const [k, [, count]] of m) if (count === 0) m.delete(k)\n  return m\n}\n\nexport class Collection {\n  constructor(inner) {\n    this.inner = inner\n  }\n\n  static empty() {\n    return new Collection(new Map())\n  }\n\n  static fromArray(items) {\n    const m = new Map()\n    for (const x of items) bump(m, x, 1)\n    return new Collection(consolidate(m))\n  }\n\n  static fromEntries(entries) {\n    const m = new Map()\n    for (const [value, mult] of entries) bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n  entries() {\n    return [...this.inner.values()].filter(([, count]) => count !== 0)\n  }\n  add(value, mult) {\n    const m = new Map(this.inner)\n    bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n  concat(other) {\n    const m = new Map(this.inner)\n    for (const [, [value, count]] of other.inner) bump(m, value, count)\n    return new Collection(consolidate(m))\n  }\n\n  negate() {\n    const m = new Map()\n    for (const [k, [value, count]] of this.inner) m.set(k, [value, -count])\n    return new Collection(m)\n  }\n\n  map(f) {\n    const m = new Map()\n    for (const [, [value, count]] of this.inner) bump(m, f(value), count)\n    return new Collection(consolidate(m))\n  }\n\n  filter(pred) {\n    const m = new Map()\n    for (const [, [value, count]] of this.inner) if (pred(value)) bump(m, value, count)\n    return new Collection(consolidate(m))\n  }\n}\n"
+  },
+  "editorDefaultFile": "/collection.test.ts",
+  "workspace": {
+    "files": {
+      "/src/collection.ts": "const keyOf = (value) => JSON.stringify(value)\n\nfunction bump(m, value, delta) {\n  const k = keyOf(value)\n  const existing = m.get(k)\n  m.set(k, [value, (existing ? existing[1] : 0) + delta])\n}\n\nfunction consolidate(m) {\n  for (const [k, [, count]] of m) if (count === 0) m.delete(k)\n  return m\n}\n\nexport class Collection {\n  constructor(inner) {\n    this.inner = inner\n  }\n\n  static empty() {\n    return new Collection(new Map())\n  }\n\n  static fromArray(items) {\n    const m = new Map()\n    for (const x of items) bump(m, x, 1)\n    return new Collection(consolidate(m))\n  }\n\n  static fromEntries(entries) {\n    const m = new Map()\n    for (const [value, mult] of entries) bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n  entries() {\n    return [...this.inner.values()].filter(([, count]) => count !== 0)\n  }\n  add(value, mult) {\n    const m = new Map(this.inner)\n    bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n  concat(other) {\n    const m = new Map(this.inner)\n    for (const [, [value, count]] of other.inner) bump(m, value, count)\n    return new Collection(consolidate(m))\n  }\n\n  negate() {\n    const m = new Map()\n    for (const [k, [value, count]] of this.inner) m.set(k, [value, -count])\n    return new Collection(m)\n  }\n\n  map(f) {\n    const m = new Map()\n    for (const [, [value, count]] of this.inner) bump(m, f(value), count)\n    return new Collection(consolidate(m))\n  }\n\n  filter(pred) {\n    const m = new Map()\n    for (const [, [value, count]] of this.inner) if (pred(value)) bump(m, value, count)\n    return new Collection(consolidate(m))\n  }\n}\n",
+      "/collection.test.ts": "import { Collection } from './src/collection.ts'\n\nconst show = (c) =>\n  c.entries().map(([v, m]) => JSON.stringify(v) + '=' + m).sort().join(' | ')\n\nconst fruit = Collection.fromArray(['apple', 'apple', 'pear'])\nconsole.log('fruit:', show(fruit))\n\nconst big = fruit.map((s) => s.toUpperCase()).filter((s) => s.length > 4)\nconsole.log('big:', show(big))\n\nconst ok = show(fruit) === '\"apple\"=2 | \"pear\"=1' && show(big) === '\"APPLE\"=2'\nconsole.log(ok ? 'PASS ✓' : 'FAIL ✗')\n",
+      "/package.json": "{\n  \"name\": \"diff-dataflow\",\n  \"type\": \"module\"\n}\n"
+    },
+    "previewPort": 3000
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "chapter": "New file",
+      "focus": "editor",
+      "narration": "A new file, `collection.test.ts`. We import `Collection` — note the explicit `.ts`.",
+      "say": "Let's write a test in a new file, collection dot test dot ts. We import Collection from our source file. One thing to notice: when we run this with node, relative imports need the explicit dot ts extension, so we write collection dot ts in the path.",
+      "cue": "a new file",
+      "action": {
+        "tool": "editor",
+        "file": "/collection.test.ts",
+        "type": "import { Collection } from './src/collection.ts'\n\n"
+      }
+    },
+    {
+      "id": "s2",
+      "chapter": "Helper",
+      "focus": "editor",
+      "narration": "A `show` helper renders a collection as sorted `value=count` text.",
+      "say": "A small show helper turns a collection into readable text: for each value and multiplicity it prints the value as JSON, an equals sign, and the count, then sorts them so the output is stable. Pure formatting.",
+      "cue": "a small show helper",
+      "action": {
+        "tool": "editor",
+        "file": "/collection.test.ts",
+        "type": "const show = (c) =>\n  c.entries().map(([v, m]) => JSON.stringify(v) + '=' + m).sort().join(' | ')\n\n"
+      }
+    },
+    {
+      "id": "s3",
+      "chapter": "Build one",
+      "focus": "editor",
+      "narration": "Build a multiset of fruit — `apple` appears twice, so its count is 2.",
+      "say": "Now the actual test. We build a collection from an array with two apples and one pear, and log it. Because fromArray folds duplicates, we expect apple equals two and pear equals one.",
+      "cue": "a collection from an array",
+      "action": {
+        "tool": "editor",
+        "file": "/collection.test.ts",
+        "type": "const fruit = Collection.fromArray(['apple', 'apple', 'pear'])\nconsole.log('fruit:', show(fruit))\n\n"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "Transform",
+      "focus": "editor",
+      "narration": "Chain `map` then `filter` — uppercase, then keep names longer than 4.",
+      "say": "Then we chain our linear operators: map each name to upper case, then filter to names longer than four letters. APPLE has five letters and keeps its count of two; PEAR has four and is dropped. We log the result.",
+      "cue": "chain our linear operators",
+      "action": {
+        "tool": "editor",
+        "file": "/collection.test.ts",
+        "type": "const big = fruit.map((s) => s.toUpperCase()).filter((s) => s.length > 4)\nconsole.log('big:', show(big))\n\n"
+      }
+    },
+    {
+      "id": "s5",
+      "chapter": "Assert",
+      "focus": "editor",
+      "narration": "Assert both results and print **PASS** or **FAIL**.",
+      "say": "Finally we assert: fruit should be apple two, pear one, and big should be APPLE two. If both hold we print PASS, otherwise FAIL. A tiny but real test.",
+      "cue": "we assert",
+      "action": {
+        "tool": "editor",
+        "file": "/collection.test.ts",
+        "type": "const ok = show(fruit) === '\"apple\"=2 | \"pear\"=1' && show(big) === '\"APPLE\"=2'\nconsole.log(ok ? 'PASS ✓' : 'FAIL ✗')\n"
+      }
+    },
+    {
+      "id": "s6",
+      "chapter": "Run it",
+      "focus": "terminal",
+      "narration": "Run it with Node — multiset counting and our linear ops, working.",
+      "say": "And we run it with node collection dot test dot ts. There it is: apple two, pear one; APPLE two; and PASS. Our multiset and its linear operators work. Next part, we make these operators incremental with Effect.",
+      "cue": "run it with node",
+      "action": {
+        "tool": "terminal",
+        "run": "node collection.test.ts",
+        "expect": "PASS"
+      }
+    }
+  ],
+  "audio": "/generated/dd-04-collection-test/audio.mp3",
+  "cueTimes": [
+    0,
+    15.604,
+    30.047,
+    41.46,
+    55.38,
+    66.827
+  ],
+  "durationSeconds": 80.991
+}

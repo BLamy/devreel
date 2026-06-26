@@ -1,0 +1,99 @@
+{
+  "slug": "dd-03-collection-ops",
+  "title": "Collection operations",
+  "subtitle": "add, concat, negate, map, filter",
+  "library": "effect",
+  "throughline": "differential dataflow",
+  "persona": "devreel",
+  "accent": "#a21caf",
+  "format": "video",
+  "series": "Differential Dataflow in Effect",
+  "seriesOrder": 3,
+  "editorSeed": {
+    "/src/collection.ts": "const keyOf = (value) => JSON.stringify(value)\n\nfunction bump(m, value, delta) {\n  const k = keyOf(value)\n  const existing = m.get(k)\n  m.set(k, [value, (existing ? existing[1] : 0) + delta])\n}\n\nfunction consolidate(m) {\n  for (const [k, [, count]] of m) if (count === 0) m.delete(k)\n  return m\n}\n\nexport class Collection {\n  constructor(inner) {\n    this.inner = inner\n  }\n\n  static empty() {\n    return new Collection(new Map())\n  }\n\n  static fromArray(items) {\n    const m = new Map()\n    for (const x of items) bump(m, x, 1)\n    return new Collection(consolidate(m))\n  }\n\n  static fromEntries(entries) {\n    const m = new Map()\n    for (const [value, mult] of entries) bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n  entries() {\n    return [...this.inner.values()].filter(([, count]) => count !== 0)\n  }\n"
+  },
+  "editorDefaultFile": "/src/collection.ts",
+  "workspace": {
+    "files": {
+      "/src/collection.ts": "const keyOf = (value) => JSON.stringify(value)\n\nfunction bump(m, value, delta) {\n  const k = keyOf(value)\n  const existing = m.get(k)\n  m.set(k, [value, (existing ? existing[1] : 0) + delta])\n}\n\nfunction consolidate(m) {\n  for (const [k, [, count]] of m) if (count === 0) m.delete(k)\n  return m\n}\n\nexport class Collection {\n  constructor(inner) {\n    this.inner = inner\n  }\n\n  static empty() {\n    return new Collection(new Map())\n  }\n\n  static fromArray(items) {\n    const m = new Map()\n    for (const x of items) bump(m, x, 1)\n    return new Collection(consolidate(m))\n  }\n\n  static fromEntries(entries) {\n    const m = new Map()\n    for (const [value, mult] of entries) bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n  entries() {\n    return [...this.inner.values()].filter(([, count]) => count !== 0)\n  }\n  add(value, mult) {\n    const m = new Map(this.inner)\n    bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n  concat(other) {\n    const m = new Map(this.inner)\n    for (const [, [value, count]] of other.inner) bump(m, value, count)\n    return new Collection(consolidate(m))\n  }\n\n  negate() {\n    const m = new Map()\n    for (const [k, [value, count]] of this.inner) m.set(k, [value, -count])\n    return new Collection(m)\n  }\n\n  map(f) {\n    const m = new Map()\n    for (const [, [value, count]] of this.inner) bump(m, f(value), count)\n    return new Collection(consolidate(m))\n  }\n\n  filter(pred) {\n    const m = new Map()\n    for (const [, [value, count]] of this.inner) if (pred(value)) bump(m, value, count)\n    return new Collection(consolidate(m))\n  }\n}\n",
+      "/package.json": "{\n  \"name\": \"diff-dataflow\",\n  \"type\": \"module\"\n}\n"
+    },
+    "previewPort": 3000
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "chapter": "add",
+      "focus": "editor",
+      "narration": "`add` returns a **new** collection with `mult` added to one value (copying the map first).",
+      "say": "Let's finish the class. add takes a value and a multiplicity and returns a new collection. We copy the inner map so the original is untouched, bump the value by the multiplicity, consolidate, and wrap. Immutability in action.",
+      "cue": "returns a new collection",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "  add(value, mult) {\n    const m = new Map(this.inner)\n    bump(m, value, mult)\n    return new Collection(consolidate(m))\n  }\n\n"
+      }
+    },
+    {
+      "id": "s2",
+      "chapter": "concat",
+      "focus": "editor",
+      "narration": "`concat` merges two collections by **summing** multiplicities.",
+      "say": "concat merges two collections. We copy our map, then for every value and count in the other collection, we bump it in. Equal values add their counts together. This is the union of multisets, and it is also how we apply a diff: concatenating a change onto the current state.",
+      "cue": "merges two collections",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "  concat(other) {\n    const m = new Map(this.inner)\n    for (const [, [value, count]] of other.inner) bump(m, value, count)\n    return new Collection(consolidate(m))\n  }\n\n"
+      }
+    },
+    {
+      "id": "s3",
+      "chapter": "negate",
+      "focus": "editor",
+      "narration": "`negate` flips every count — turning a collection into its **retraction**.",
+      "say": "negate flips the sign of every multiplicity. A collection of additions becomes a collection of retractions. We will use this to express removals: negate, then concat, undoes exactly what was there.",
+      "cue": "flips the sign",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "  negate() {\n    const m = new Map()\n    for (const [k, [value, count]] of this.inner) m.set(k, [value, -count])\n    return new Collection(m)\n  }\n\n"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "map",
+      "focus": "editor",
+      "narration": "`map` transforms each value, **carrying its count along**.",
+      "say": "Now the interesting ones. map applies a function to each value, carrying its count along, bumping the result into a new map. Here is the crucial property: map is linear. Because each input contributes independently, applying map to a diff gives exactly the diff of the output. That is why map needs no state to run incrementally.",
+      "cue": "map applies a function",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "  map(f) {\n    const m = new Map()\n    for (const [, [value, count]] of this.inner) bump(m, f(value), count)\n    return new Collection(consolidate(m))\n  }\n\n"
+      }
+    },
+    {
+      "id": "s5",
+      "chapter": "filter",
+      "focus": "editor",
+      "narration": "`filter` keeps values passing a predicate, with their counts — and closes the class.",
+      "say": "filter keeps only values that pass a predicate, with their counts intact, and drops the rest. Like map, it is linear and works directly on diffs. With the closing brace, our Collection is complete. Next, let's prove it works in the terminal.",
+      "cue": "keeps only values that pass",
+      "action": {
+        "tool": "editor",
+        "file": "/src/collection.ts",
+        "type": "  filter(pred) {\n    const m = new Map()\n    for (const [, [value, count]] of this.inner) if (pred(value)) bump(m, value, count)\n    return new Collection(consolidate(m))\n  }\n}\n"
+      }
+    }
+  ],
+  "audio": "/generated/dd-03-collection-ops/audio.mp3",
+  "cueTimes": [
+    0,
+    15.453,
+    33.193,
+    46.614,
+    68.116
+  ],
+  "durationSeconds": 82.663
+}

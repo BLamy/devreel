@@ -5,7 +5,7 @@ import { PreviewPane } from '../panes/PreviewPane'
 import { DiagramPane } from '../panes/DiagramPane'
 import { DbPane } from '../panes/DbPane'
 import { TerminalPane } from '../panes/TerminalPane'
-import { computeEditorView } from './editorState'
+import { computeEditorView, openFiles } from './editorState'
 import { renderInlineMarkdown } from './markdown'
 
 const DEFAULT_SCENE_MS = 4500
@@ -225,6 +225,7 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
   // Editor's current file (complete only) → hot-reloads the live preview via HMR.
   const liveFiles = editorView && !editorView.typing ? { [editorView.file]: editorView.content } : undefined
 
+  const tabs = useMemo(() => openFiles(lesson, index), [lesson, index])
   const editorNode = (
     <EditorPane
       file={editorView?.file ?? 'untitled.tsx'}
@@ -232,6 +233,7 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
       callouts={editorView?.callouts}
       diagnostics={editorView?.diagnostics}
       reveal={editorView?.reveal}
+      tabs={tabs}
     />
   )
   // All used output panes mounted persistently; shown when active.

@@ -21,6 +21,8 @@ export interface EditorPaneProps {
   reveal?: [number, number]
   /** Keep the latest typed line in view. */
   follow?: boolean
+  /** Open files for the tab strip; `file` is the active one. */
+  tabs?: string[]
 }
 
 const severityMap: Record<string, Monaco.MarkerSeverity> = {
@@ -29,7 +31,7 @@ const severityMap: Record<string, Monaco.MarkerSeverity> = {
   info: 2,
 }
 
-export function EditorPane({ file, content, callouts = NO_CALLOUTS, diagnostics = NO_DIAGS, reveal, follow = true }: EditorPaneProps) {
+export function EditorPane({ file, content, callouts = NO_CALLOUTS, diagnostics = NO_DIAGS, reveal, follow = true, tabs }: EditorPaneProps) {
   const hostRef = useRef<HTMLDivElement | null>(null)
   const editorRef = useRef<Monaco.editor.IStandaloneCodeEditor | null>(null)
   const lastContentRef = useRef<string>('')
@@ -160,10 +162,35 @@ export function EditorPane({ file, content, callouts = NO_CALLOUTS, diagnostics 
   }
   useLayoutEffect(repositionCallouts, [callouts, content])
 
+  const showTabs = !!tabs && tabs.length > 1
   return (
-    <div style={{ position: 'relative', height: '100%', width: '100%', overflow: 'hidden', background: '#1e1e1e' }}>
-      <div ref={hostRef} style={{ position: 'absolute', inset: 0 }} />
-      {calloutPos.map((c, i) => (
+    <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', overflow: 'hidden', background: '#1e1e1e' }}>
+      {showTabs && (
+        <div style={{ display: 'flex', gap: 1, background: '#15151a', borderBottom: '1px solid #2a2a33', overflowX: 'auto', flex: '0 0 auto' }}>
+          {tabs!.map((t) => {
+            const active = t === file
+            return (
+              <div
+                key={t}
+                style={{
+                  padding: '6px 12px',
+                  fontSize: 12,
+                  fontFamily: 'ui-monospace, monospace',
+                  whiteSpace: 'nowrap',
+                  color: active ? '#e2e8f0' : '#7a8290',
+                  background: active ? '#1e1e1e' : 'transparent',
+                  borderTop: active ? '2px solid #38bdf8' : '2px solid transparent',
+                }}
+              >
+                {t.replace(/^\//, '')}
+              </div>
+            )
+          })}
+        </div>
+      )}
+      <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+        <div ref={hostRef} style={{ position: 'absolute', inset: 0 }} />
+        {calloutPos.map((c, i) => (
         <div
           key={i}
           style={{
@@ -185,7 +212,8 @@ export function EditorPane({ file, content, callouts = NO_CALLOUTS, diagnostics 
         >
           {c.text}
         </div>
-      ))}
+        ))}
+      </div>
     </div>
   )
 }

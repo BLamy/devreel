@@ -16,6 +16,15 @@ give each lesson the SAME `series` title and an ascending `seriesOrder` (1, 2, 3
 The feed groups a series into one card and plays the parts back-to-back. Prefer a
 focused 1–3 minute lesson over a sprawling one.
 
+BUILDING A LIBRARY ACROSS A SERIES. To have later parts start with the code earlier
+parts wrote, set `editorSeed` (a map of file → existing content) on the part and only
+`type` the NEW code. `workspace.files` should hold the full state for that part (what
+the preview/terminal runs). Multiple files are supported — each shows as an editor
+tab. When the part RUNS code with `node`, relative imports MUST use explicit
+extensions (`import { x } from './src/foo.ts'`) — almostnode's node runtime does not
+infer them. Class methods can't be appended across parts (the brace closes), so build
+one class in contiguous parts; top-level functions and separate files append cleanly.
+
 THE LESSON SHAPE
   {
     slug, title, subtitle, library, throughline, persona, accent,

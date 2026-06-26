@@ -18,6 +18,17 @@ function isEditor(scene: Scene): scene is Scene & { action: EditorAction } {
   return scene.action?.tool === 'editor'
 }
 
+/** Ordered list of files open by this scene: seeded files first, then edited ones. */
+export function openFiles(lesson: Lesson, sceneIndex: number): string[] {
+  const seen: string[] = []
+  for (const f of Object.keys(lesson.editorSeed ?? {})) if (!seen.includes(f)) seen.push(f)
+  for (let i = 0; i <= sceneIndex && i < lesson.scenes.length; i++) {
+    const s = lesson.scenes[i]
+    if (isEditor(s) && !seen.includes(s.action.file)) seen.push(s.action.file)
+  }
+  return seen
+}
+
 /** Fully apply an editor action to the accumulated file map. */
 function applyFull(files: Map<string, string>, a: EditorAction): void {
   if (a.replace != null) files.set(a.file, a.replace)
@@ -37,7 +48,9 @@ export function computeEditorView(
   sceneIndex: number,
   progress: number,
 ): EditorView | null {
-  const files = new Map<string, string>()
+  // Start from any pre-existing (seeded) code so a part can begin with code
+  // from a prior series part, then build on top of it.
+  const files = new Map<string, string>(Object.entries(lesson.editorSeed ?? {}))
 
   // Fold every editor scene strictly before the current one.
   for (let i = 0; i < sceneIndex && i < lesson.scenes.length; i++) {
@@ -85,6 +98,10 @@ export function computeEditorView(
     }
   }
 
+  // Nothing edited yet but code was seeded → show the default/first seeded file.
+  if (!viewFile) {
+    viewFile = lesson.editorDefaultFile ?? Object.keys(lesson.editorSeed ?? {})[0]
+  }
   if (!viewFile) return null
   return {
     file: viewFile,

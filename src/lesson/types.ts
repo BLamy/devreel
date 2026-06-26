@@ -213,6 +213,13 @@ export interface Lesson {
    */
   series?: string
   seriesOrder?: number
+  /**
+   * Pre-existing editor content shown from the very first scene (e.g. the code a
+   * prior series part ended with). Scenes then `type` the new additions on top.
+   */
+  editorSeed?: Record<string, string>
+  /** Which file the editor shows first (defaults to the first seeded/edited file). */
+  editorDefaultFile?: string
   workspace: Workspace
   /** Nodes/edges for any `diagram` scenes. */
   diagram?: { nodes: DiagramNode[]; edges: DiagramEdge[] }
