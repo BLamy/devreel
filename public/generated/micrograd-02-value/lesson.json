@@ -1,0 +1,115 @@
+{
+  "slug": "micrograd-02-value",
+  "title": "The Value class",
+  "subtitle": "One scalar, its gradient, and the graph",
+  "library": "micrograd",
+  "throughline": "the chain rule",
+  "persona": "devreel",
+  "accent": "#f59e0b",
+  "format": "video",
+  "series": "Build micrograd in TypeScript",
+  "seriesOrder": 2,
+  "stage": {
+    "editor": 1,
+    "mobileEditor": 1
+  },
+  "editorSeed": {},
+  "editorDefaultFile": "/src/engine.ts",
+  "workspace": {
+    "files": {
+      "/src/engine.ts": "export class Value {\n  grad = 0\n  _backward = () => {}\n\n  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op\n  }\n\n  add(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data + o.data, [this, o], '+')\n    out._backward = () => {\n      this.grad += out.grad\n      o.grad += out.grad\n    }\n    return out\n  }\n\n  mul(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data * o.data, [this, o], '*')\n    out._backward = () => {\n      this.grad += o.data * out.grad\n      o.grad += this.data * out.grad\n    }\n    return out\n  }\n\n",
+      "/package.json": "{\n  \"name\": \"micrograd-ts\",\n  \"type\": \"module\"\n}\n"
+    },
+    "previewPort": 3000
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "chapter": "Value",
+      "focus": "editor",
+      "narration": "A `Value` carries `grad` — the gradient we’ll compute — and `_backward`, a closure that knows how to push gradient to its inputs.",
+      "say": "Everything in micrograd is a Value: a box around one scalar number. Two fields up front. grad is the derivative of the final loss with respect to this value — it starts at zero, because we haven't computed anything yet. And underscore backward is a little function that will know how to push gradient from this node back into its inputs. For a plain Value, it defaults to doing nothing.",
+      "cue": "a box around one scalar number",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "export class Value {\n  grad = 0\n  _backward = () => {}\n\n"
+      }
+    },
+    {
+      "id": "s3",
+      "chapter": "Constructor",
+      "focus": "editor",
+      "narration": "The constructor: store the number (`data`), remember the inputs that made it (`_prev`), and how (`_op`).",
+      "say": "The constructor takes the number itself — data — plus an optional list of children, the inputs that made this value, and a label for which operation made it. It stores the data, wraps the children in a Set called underscore prev, and keeps the label as underscore op. Every Value remembers the expression graph that built it — and that is the entire data structure.",
+      "cue": "the entire data structure",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op\n  }\n\n"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "add",
+      "focus": "editor",
+      "narration": "`add`: compute `data + data`, and record that **we** are the parents (`[this, o]`, op `+`).",
+      "say": "Now the first operation: add. If the other operand is a plain number we wrap it in a Value first. Then we build the output: its data is just the two datas added — but crucially, we record this and o as its children, with op plus. We are building the graph as a side effect of doing the math.",
+      "cue": "building the graph as a side effect",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "  add(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data + o.data, [this, o], '+')\n"
+      }
+    },
+    {
+      "id": "s5",
+      "chapter": "add backward",
+      "focus": "editor",
+      "narration": "Addition **routes gradient through unchanged** — and we `+=` (accumulate!), because a Value can be used twice.",
+      "say": "And here is add's backward rule. The derivative of a sum with respect to either input is one — so whatever gradient the output has, both inputs receive it unchanged. Notice it is plus equals, not equals. If the same Value is used in two places, both paths must add up. Assigning instead of accumulating is the classic autograd bug.",
+      "cue": "plus equals, not equals",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "    out._backward = () => {\n      this.grad += out.grad\n      o.grad += out.grad\n    }\n    return out\n  }\n\n"
+      }
+    },
+    {
+      "id": "s6",
+      "chapter": "mul",
+      "focus": "editor",
+      "narration": "`mul`: same shape — multiply the datas, record the parents with op `*`.",
+      "say": "Multiplication has exactly the same shape. Wrap the operand if needed, multiply the two datas, and record both inputs as children with op star.",
+      "cue": "exactly the same shape",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "  mul(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data * o.data, [this, o], '*')\n"
+      }
+    },
+    {
+      "id": "s7",
+      "chapter": "mul backward",
+      "focus": "editor",
+      "narration": "The product rule: each input’s gradient is **the *other* input’s data** times `out.grad`. The class stays open — backward pass next.",
+      "say": "But multiplication's backward rule is where calculus first shows up. The derivative of a times b with respect to a — is b. So each input receives the other input's data, times the gradient flowing in from the output. That one line is the chain rule in miniature. We'll leave the class open here; next part we add powers, relu, and the backward pass that walks the whole graph.",
+      "cue": "the chain rule in miniature",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "    out._backward = () => {\n      this.grad += o.data * out.grad\n      o.grad += this.data * out.grad\n    }\n    return out\n  }\n\n"
+      }
+    }
+  ],
+  "audio": "/generated/micrograd-02-value/audio.mp3",
+  "cueTimes": [
+    0,
+    21.838,
+    43.399,
+    61.068,
+    82.245,
+    90.744
+  ],
+  "durationSeconds": 113.407
+}

@@ -1,0 +1,131 @@
+{
+  "slug": "micrograd-05-training",
+  "title": "Train it on XOR",
+  "subtitle": "Gradient descent, a classic bug, and a live run",
+  "library": "micrograd",
+  "throughline": "the chain rule",
+  "persona": "devreel",
+  "accent": "#f59e0b",
+  "format": "video",
+  "series": "Build micrograd in TypeScript",
+  "seriesOrder": 5,
+  "stage": {
+    "editor": 0.6,
+    "mobileEditor": 0.68
+  },
+  "editorSeed": {
+    "/src/engine.ts": "export class Value {\n  grad = 0\n  _backward = () => {}\n\n  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op\n  }\n\n  add(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data + o.data, [this, o], '+')\n    out._backward = () => {\n      this.grad += out.grad\n      o.grad += out.grad\n    }\n    return out\n  }\n\n  mul(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data * o.data, [this, o], '*')\n    out._backward = () => {\n      this.grad += o.data * out.grad\n      o.grad += this.data * out.grad\n    }\n    return out\n  }\n\n  pow(n) {\n    const out = new Value(this.data ** n, [this], '**' + n)\n    out._backward = () => {\n      this.grad += n * this.data ** (n - 1) * out.grad\n    }\n    return out\n  }\n\n  relu() {\n    const out = new Value(this.data < 0 ? 0 : this.data, [this], 'ReLU')\n    out._backward = () => {\n      this.grad += (out.data > 0 ? 1 : 0) * out.grad\n    }\n    return out\n  }\n\n  neg() {\n    return this.mul(-1)\n  }\n\n  sub(other) {\n    return this.add(other instanceof Value ? other.neg() : -other)\n  }\n\n  div(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    return this.mul(o.pow(-1))\n  }\n\n  backward() {\n    const topo = []\n    const visited = new Set()\n    const build = (v) => {\n      if (visited.has(v)) return\n      visited.add(v)\n      for (const child of v._prev) build(child)\n      topo.push(v)\n    }\n    build(this)\n    this.grad = 1\n    for (const v of topo.reverse()) v._backward()\n  }\n}\n",
+    "/src/nn.ts": "import { Value } from './engine.ts'\n\nexport class Module {\n  zeroGrad() {\n    for (const p of this.parameters()) p.grad = 0\n  }\n  parameters() {\n    return []\n  }\n}\n\nexport class Neuron extends Module {\n  b = new Value(0)\n\n  constructor(nin, nonlin = true, rand = Math.random) {\n    super()\n    this.w = Array.from({ length: nin }, () => new Value(rand() * 2 - 1))\n    this.nonlin = nonlin\n  }\n\n  call(x) {\n    let act = this.b\n    for (let i = 0; i < this.w.length; i++) act = act.add(this.w[i].mul(x[i]))\n    return this.nonlin ? act.relu() : act\n  }\n\n  parameters() {\n    return [...this.w, this.b]\n  }\n}\n\nexport class Layer extends Module {\n  constructor(nin, nout, nonlin = true, rand = Math.random) {\n    super()\n    this.neurons = Array.from({ length: nout }, () => new Neuron(nin, nonlin, rand))\n  }\n\n  call(x) {\n    return this.neurons.map((n) => n.call(x))\n  }\n\n  parameters() {\n    return this.neurons.flatMap((n) => n.parameters())\n  }\n}\n\nexport class MLP extends Module {\n  constructor(nin, nouts, rand = Math.random) {\n    super()\n    const sz = [nin, ...nouts]\n    this.layers = sz.slice(0, -1).map((_, i) => new Layer(sz[i], sz[i + 1], i !== nouts.length - 1, rand))\n  }\n\n  call(x) {\n    let out = x\n    for (const layer of this.layers) out = layer.call(out)\n    return out\n  }\n\n  parameters() {\n    return this.layers.flatMap((l) => l.parameters())\n  }\n}\n"
+  },
+  "editorDefaultFile": "/train.ts",
+  "workspace": {
+    "files": {
+      "/src/engine.ts": "export class Value {\n  grad = 0\n  _backward = () => {}\n\n  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op\n  }\n\n  add(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data + o.data, [this, o], '+')\n    out._backward = () => {\n      this.grad += out.grad\n      o.grad += out.grad\n    }\n    return out\n  }\n\n  mul(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data * o.data, [this, o], '*')\n    out._backward = () => {\n      this.grad += o.data * out.grad\n      o.grad += this.data * out.grad\n    }\n    return out\n  }\n\n  pow(n) {\n    const out = new Value(this.data ** n, [this], '**' + n)\n    out._backward = () => {\n      this.grad += n * this.data ** (n - 1) * out.grad\n    }\n    return out\n  }\n\n  relu() {\n    const out = new Value(this.data < 0 ? 0 : this.data, [this], 'ReLU')\n    out._backward = () => {\n      this.grad += (out.data > 0 ? 1 : 0) * out.grad\n    }\n    return out\n  }\n\n  neg() {\n    return this.mul(-1)\n  }\n\n  sub(other) {\n    return this.add(other instanceof Value ? other.neg() : -other)\n  }\n\n  div(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    return this.mul(o.pow(-1))\n  }\n\n  backward() {\n    const topo = []\n    const visited = new Set()\n    const build = (v) => {\n      if (visited.has(v)) return\n      visited.add(v)\n      for (const child of v._prev) build(child)\n      topo.push(v)\n    }\n    build(this)\n    this.grad = 1\n    for (const v of topo.reverse()) v._backward()\n  }\n}\n",
+      "/src/nn.ts": "import { Value } from './engine.ts'\n\nexport class Module {\n  zeroGrad() {\n    for (const p of this.parameters()) p.grad = 0\n  }\n  parameters() {\n    return []\n  }\n}\n\nexport class Neuron extends Module {\n  b = new Value(0)\n\n  constructor(nin, nonlin = true, rand = Math.random) {\n    super()\n    this.w = Array.from({ length: nin }, () => new Value(rand() * 2 - 1))\n    this.nonlin = nonlin\n  }\n\n  call(x) {\n    let act = this.b\n    for (let i = 0; i < this.w.length; i++) act = act.add(this.w[i].mul(x[i]))\n    return this.nonlin ? act.relu() : act\n  }\n\n  parameters() {\n    return [...this.w, this.b]\n  }\n}\n\nexport class Layer extends Module {\n  constructor(nin, nout, nonlin = true, rand = Math.random) {\n    super()\n    this.neurons = Array.from({ length: nout }, () => new Neuron(nin, nonlin, rand))\n  }\n\n  call(x) {\n    return this.neurons.map((n) => n.call(x))\n  }\n\n  parameters() {\n    return this.neurons.flatMap((n) => n.parameters())\n  }\n}\n\nexport class MLP extends Module {\n  constructor(nin, nouts, rand = Math.random) {\n    super()\n    const sz = [nin, ...nouts]\n    this.layers = sz.slice(0, -1).map((_, i) => new Layer(sz[i], sz[i + 1], i !== nouts.length - 1, rand))\n  }\n\n  call(x) {\n    let out = x\n    for (const layer of this.layers) out = layer.call(out)\n    return out\n  }\n\n  parameters() {\n    return this.layers.flatMap((l) => l.parameters())\n  }\n}\n",
+      "/train.ts": "import { Value } from './src/engine.ts'\nimport { MLP } from './src/nn.ts'\n\n// deterministic init so your run matches this video exactly\nfunction mulberry32(seed) {\n  let a = seed >>> 0\n  return () => {\n    a |= 0\n    a = (a + 0x6d2b79f5) | 0\n    let t = Math.imul(a ^ (a >>> 15), 1 | a)\n    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t\n    return ((t ^ (t >>> 14)) >>> 0) / 4294967296\n  }\n}\n\n// sanity check — ported from micrograd's own test suite (verified against PyTorch)\nconst x = new Value(-4.0)\nconst z = x.mul(2).add(2).add(x)\nconst q = z.relu().add(z.mul(x))\nconst h = z.mul(z).relu()\nconst y = h.add(q).add(q.mul(x))\ny.backward()\nconsole.log('sanity:', y.data === -20 && x.grad === 46 ? 'PASS' : 'FAIL')\n\n// XOR — the classic dataset no straight line can separate\nconst rand = mulberry32(42)\nconst model = new MLP(2, [4, 1], rand)\nconst xs = [[0, 0], [0, 1], [1, 0], [1, 1]].map((row) => row.map((v) => new Value(v)))\nconst ys = [-1, 1, 1, -1]\n\nlet last = 0\nfor (let step = 0; step < 40; step++) {\n  let loss = new Value(0)\n  for (let i = 0; i < xs.length; i++) {\n    const pred = model.call(xs[i])[0]\n    loss = loss.add(pred.sub(ys[i]).pow(2))\n  }\n  model.zeroGrad()\n  loss.backward()\n  for (const p of model.parameters()) p.data -= 0.05 * p.grad\n  if (step % 5 === 0 || step === 39) console.log('step', step, 'loss', loss.data.toFixed(4))\n  last = loss.data\n}\nconsole.log('trained:', last < 0.1 ? 'PASS' : 'FAIL')\n",
+      "/package.json": "{\n  \"name\": \"micrograd-ts\",\n  \"type\": \"module\"\n}\n"
+    },
+    "previewPort": 3000
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "chapter": "The landscape",
+      "focus": "viz",
+      "narration": "Training = descending the **loss landscape**. Our engine computes the slope; the step is ours to take.",
+      "say": "One more picture before we type. The loss, as a function of the weights, is a landscape. Training is descending it. Our engine's job is to compute the slope under our feet — the gradient. The step is ours to take.",
+      "cue": "compute the slope under our feet",
+      "action": {
+        "tool": "viz",
+        "animation": "gradient-descent",
+        "act": "the loss landscape"
+      }
+    },
+    {
+      "id": "s2",
+      "chapter": "Descent",
+      "focus": "viz",
+      "narration": "Follow `−∇loss` in tiny steps: **gradient descent** — exactly the loop we’re about to write.",
+      "say": "Follow the negative gradient in tiny steps, and you roll downhill. That is gradient descent — and it is exactly, literally, the loop we are about to write.",
+      "cue": "exactly, literally, the loop",
+      "action": {
+        "tool": "viz",
+        "animation": "gradient-descent",
+        "act": "gradient descent"
+      }
+    },
+    {
+      "id": "s3",
+      "chapter": "Setup",
+      "focus": "editor",
+      "narration": "Imports, a **seeded** random (mulberry32, seed 42), and micrograd’s own **sanity check**: after `backward()`, `x.grad` must be exactly **46**.",
+      "say": "The training script. We import the engine and the MLP, and define a tiny seeded random generator so your run matches this video number for number. Then a sanity check ported straight from micrograd's own test suite: build this gnarly expression from x equals minus four, run backward, and x's gradient must come out exactly forty six — the value PyTorch computes. If this prints PASS, our chain rule is right.",
+      "cue": "exactly forty six",
+      "action": {
+        "tool": "editor",
+        "file": "/train.ts",
+        "type": "import { Value } from './src/engine.ts'\nimport { MLP } from './src/nn.ts'\n\n// deterministic init so your run matches this video exactly\nfunction mulberry32(seed) {\n  let a = seed >>> 0\n  return () => {\n    a |= 0\n    a = (a + 0x6d2b79f5) | 0\n    let t = Math.imul(a ^ (a >>> 15), 1 | a)\n    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t\n    return ((t ^ (t >>> 14)) >>> 0) / 4294967296\n  }\n}\n\n// sanity check — ported from micrograd's own test suite (verified against PyTorch)\nconst x = new Value(-4.0)\nconst z = x.mul(2).add(2).add(x)\nconst q = z.relu().add(z.mul(x))\nconst h = z.mul(z).relu()\nconst y = h.add(q).add(q.mul(x))\ny.backward()\nconsole.log('sanity:', y.data === -20 && x.grad === 46 ? 'PASS' : 'FAIL')\n\n// XOR — the classic dataset no straight line can separate\nconst rand = mulberry32(42)\nconst model = new MLP(2, [4, 1], rand)\nconst xs = [[0, 0], [0, 1], [1, 0], [1, 1]].map((row) => row.map((v) => new Value(v)))\nconst ys = [-1, 1, 1, -1]\n"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "The loop",
+      "focus": "editor",
+      "narration": "XOR data (targets ±1), `MLP(2, [4, 1])` — 17 parameters. Loop: forward → squared-error loss → `backward()` → step **against** the gradient.",
+      "say": "The data is XOR: four points, targets minus one or plus one — famously impossible for a single straight line. The model is an MLP with two inputs, four hidden neurons, one output: seventeen parameters. And the loop: forward every point, sum the squared errors into one loss, call backward, then nudge every parameter a small step against its gradient.",
+      "cue": "famously impossible",
+      "action": {
+        "tool": "editor",
+        "file": "/train.ts",
+        "type": "\nlet last = 0\nfor (let step = 0; step < 40; step++) {\n  let loss = new Value(0)\n  for (let i = 0; i < xs.length; i++) {\n    const pred = model.call(xs[i])[0]\n    loss = loss.add(pred.sub(ys[i]).pow(2))\n  }\n  loss.backward()\n  for (const p of model.parameters()) p.data -= 0.05 * p.grad\n  if (step % 5 === 0 || step === 39) console.log('step', step, 'loss', loss.data.toFixed(4))\n  last = loss.data\n}\nconsole.log('trained:', last < 0.1 ? 'PASS' : 'FAIL')\n",
+        "diagnostics": [
+          {
+            "line": 38,
+            "message": "gradients accumulate: grads from step 1 are still in the params at step 2 — call zeroGrad() before backward()",
+            "severity": "warning"
+          }
+        ]
+      }
+    },
+    {
+      "id": "s5",
+      "chapter": "The bug",
+      "focus": "editor",
+      "narration": "⚠️ **The classic bug**: `grad` *accumulates* (`+=`). Without `zeroGrad()` every step adds to stale gradients — the loss bounces instead of falling (it ends at 0.47: FAIL).",
+      "say": "But there is a bug in that loop, and it is the most classic one in all of deep learning. Remember: every backward rule accumulates with plus equals. That is correct within one backward pass — but between steps, the old gradients are still sitting in the parameters. Run it like this and the loss falls at first, then bounces — point one seven, up to one point one, never settling, and the run ends in FAIL. One line fixes it: zero grad, right before backward.",
+      "cue": "the old gradients are still sitting",
+      "action": {
+        "tool": "editor",
+        "file": "/train.ts",
+        "replace": "import { Value } from './src/engine.ts'\nimport { MLP } from './src/nn.ts'\n\n// deterministic init so your run matches this video exactly\nfunction mulberry32(seed) {\n  let a = seed >>> 0\n  return () => {\n    a |= 0\n    a = (a + 0x6d2b79f5) | 0\n    let t = Math.imul(a ^ (a >>> 15), 1 | a)\n    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t\n    return ((t ^ (t >>> 14)) >>> 0) / 4294967296\n  }\n}\n\n// sanity check — ported from micrograd's own test suite (verified against PyTorch)\nconst x = new Value(-4.0)\nconst z = x.mul(2).add(2).add(x)\nconst q = z.relu().add(z.mul(x))\nconst h = z.mul(z).relu()\nconst y = h.add(q).add(q.mul(x))\ny.backward()\nconsole.log('sanity:', y.data === -20 && x.grad === 46 ? 'PASS' : 'FAIL')\n\n// XOR — the classic dataset no straight line can separate\nconst rand = mulberry32(42)\nconst model = new MLP(2, [4, 1], rand)\nconst xs = [[0, 0], [0, 1], [1, 0], [1, 1]].map((row) => row.map((v) => new Value(v)))\nconst ys = [-1, 1, 1, -1]\n\nlet last = 0\nfor (let step = 0; step < 40; step++) {\n  let loss = new Value(0)\n  for (let i = 0; i < xs.length; i++) {\n    const pred = model.call(xs[i])[0]\n    loss = loss.add(pred.sub(ys[i]).pow(2))\n  }\n  model.zeroGrad()\n  loss.backward()\n  for (const p of model.parameters()) p.data -= 0.05 * p.grad\n  if (step % 5 === 0 || step === 39) console.log('step', step, 'loss', loss.data.toFixed(4))\n  last = loss.data\n}\nconsole.log('trained:', last < 0.1 ? 'PASS' : 'FAIL')\n",
+        "reveal": [
+          35,
+          41
+        ]
+      }
+    },
+    {
+      "id": "s6",
+      "chapter": "Run it",
+      "focus": "terminal",
+      "narration": "The run: **sanity PASS**, then the loss falls `3.55 → 0.05` in 40 steps. XOR — learned by an engine we wrote from scratch.",
+      "say": "Moment of truth. We run the script with node. The sanity check passes — our gradients match PyTorch. And then watch the loss: three point five five, falling step by step to zero point zero five by step thirty nine. Trained: PASS. That is XOR, learned by gradient descent, on an autograd engine we wrote from scratch. That's micrograd.",
+      "cue": "Moment of truth",
+      "action": {
+        "tool": "terminal",
+        "run": "node train.ts",
+        "expect": "trained: PASS"
+      }
+    }
+  ],
+  "audio": "/generated/micrograd-05-training/audio.mp3",
+  "cueTimes": [
+    0,
+    13.189,
+    23.823,
+    48.913,
+    72.48,
+    100.193
+  ],
+  "durationSeconds": 122.647
+}

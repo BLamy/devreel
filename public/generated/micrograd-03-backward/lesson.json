@@ -1,0 +1,117 @@
+{
+  "slug": "micrograd-03-backward",
+  "title": "The backward pass",
+  "subtitle": "pow, relu, and the topological walk",
+  "library": "micrograd",
+  "throughline": "the chain rule",
+  "persona": "devreel",
+  "accent": "#f59e0b",
+  "format": "video",
+  "series": "Build micrograd in TypeScript",
+  "seriesOrder": 3,
+  "stage": {
+    "editor": 1,
+    "mobileEditor": 1
+  },
+  "editorSeed": {
+    "/src/engine.ts": "export class Value {\n  grad = 0\n  _backward = () => {}\n\n  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op\n  }\n\n  add(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data + o.data, [this, o], '+')\n    out._backward = () => {\n      this.grad += out.grad\n      o.grad += out.grad\n    }\n    return out\n  }\n\n  mul(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data * o.data, [this, o], '*')\n    out._backward = () => {\n      this.grad += o.data * out.grad\n      o.grad += this.data * out.grad\n    }\n    return out\n  }\n\n"
+  },
+  "editorDefaultFile": "/src/engine.ts",
+  "workspace": {
+    "files": {
+      "/src/engine.ts": "export class Value {\n  grad = 0\n  _backward = () => {}\n\n  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op\n  }\n\n  add(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data + o.data, [this, o], '+')\n    out._backward = () => {\n      this.grad += out.grad\n      o.grad += out.grad\n    }\n    return out\n  }\n\n  mul(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data * o.data, [this, o], '*')\n    out._backward = () => {\n      this.grad += o.data * out.grad\n      o.grad += this.data * out.grad\n    }\n    return out\n  }\n\n  pow(n) {\n    const out = new Value(this.data ** n, [this], '**' + n)\n    out._backward = () => {\n      this.grad += n * this.data ** (n - 1) * out.grad\n    }\n    return out\n  }\n\n  relu() {\n    const out = new Value(this.data < 0 ? 0 : this.data, [this], 'ReLU')\n    out._backward = () => {\n      this.grad += (out.data > 0 ? 1 : 0) * out.grad\n    }\n    return out\n  }\n\n  neg() {\n    return this.mul(-1)\n  }\n\n  sub(other) {\n    return this.add(other instanceof Value ? other.neg() : -other)\n  }\n\n  div(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    return this.mul(o.pow(-1))\n  }\n\n  backward() {\n    const topo = []\n    const visited = new Set()\n    const build = (v) => {\n      if (visited.has(v)) return\n      visited.add(v)\n      for (const child of v._prev) build(child)\n      topo.push(v)\n    }\n    build(this)\n    this.grad = 1\n    for (const v of topo.reverse()) v._backward()\n  }\n}\n",
+      "/package.json": "{\n  \"name\": \"micrograd-ts\",\n  \"type\": \"module\"\n}\n"
+    },
+    "previewPort": 3000
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "chapter": "pow",
+      "focus": "editor",
+      "narration": "`pow`: the power rule — `n · xⁿ⁻¹` — times the incoming gradient.",
+      "say": "Let's finish the engine. pow raises a Value to a plain number exponent. Its backward rule is the power rule from high school calculus: n times x to the n minus one, times the gradient flowing in. We will use pow of two for the loss, and pow of minus one for division.",
+      "cue": "the power rule",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "  pow(n) {\n    const out = new Value(this.data ** n, [this], '**' + n)\n    out._backward = () => {\n      this.grad += n * this.data ** (n - 1) * out.grad\n    }\n    return out\n  }\n\n"
+      }
+    },
+    {
+      "id": "s2",
+      "chapter": "relu",
+      "focus": "editor",
+      "narration": "`relu`: clamp negatives to 0. Backward: gradient passes **only where the output was positive** — a gate.",
+      "say": "relu is the nonlinearity — if the data is negative, the output is zero, otherwise it passes through. Its backward rule is a gate: if the output was positive, gradient flows through untouched; if the output was zero, nothing flows at all. Dead simple, and it is what lets networks bend.",
+      "cue": "gradient flows through untouched",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "  relu() {\n    const out = new Value(this.data < 0 ? 0 : this.data, [this], 'ReLU')\n    out._backward = () => {\n      this.grad += (out.data > 0 ? 1 : 0) * out.grad\n    }\n    return out\n  }\n\n"
+      }
+    },
+    {
+      "id": "s3",
+      "chapter": "Sugar",
+      "focus": "editor",
+      "narration": "`neg` and `sub` are **free**: built from `mul` and `add`, so their gradients come for free too.",
+      "say": "Negation and subtraction cost us nothing. neg is just multiply by minus one, and sub is add the negation. Because they are built from ops that already know their derivatives, their gradients come for free. This is the deep trick of autograd: compose a few primitives, and everything downstream is differentiable.",
+      "cue": "their gradients come for free",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "  neg() {\n    return this.mul(-1)\n  }\n\n  sub(other) {\n    return this.add(other instanceof Value ? other.neg() : -other)\n  }\n\n"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "div",
+      "focus": "editor",
+      "narration": "`div` too: `a / b` is just `a · b⁻¹`.",
+      "say": "Division, same story: a divided by b is a times b to the power of minus one. pow already knows how to differentiate that.",
+      "cue": "Division, same story",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "  div(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    return this.mul(o.pow(-1))\n  }\n\n"
+      }
+    },
+    {
+      "id": "s5",
+      "chapter": "Topo sort",
+      "focus": "editor",
+      "narration": "`backward()` step 1: a **topological sort** — visit children first, so every node comes *after* everything it depends on.",
+      "say": "Now the finale: backward. Before we can apply the chain rule we need an order. This little depth-first walk visits each node once, recurses into its children first, and only then appends the node — a topological sort. Every node lands after everything it depends on.",
+      "cue": "a topological sort",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "  backward() {\n    const topo = []\n    const visited = new Set()\n    const build = (v) => {\n      if (visited.has(v)) return\n      visited.add(v)\n      for (const child of v._prev) build(child)\n      topo.push(v)\n    }\n    build(this)\n"
+      }
+    },
+    {
+      "id": "s6",
+      "chapter": "Chain rule",
+      "focus": "editor",
+      "narration": "Step 2: seed `this.grad = 1`, walk the list **in reverse**, and let each node’s `_backward` push gradient to its inputs. Engine done.",
+      "say": "Then three lines finish the entire engine. Seed the output's own gradient to one — the loss changes one for one with itself. Walk the topological order in reverse, from the output back toward the leaves. And at each node, call its underscore backward, which pushes gradient one edge deeper. That's backpropagation. The whole thing.",
+      "cue": "That's backpropagation",
+      "action": {
+        "tool": "editor",
+        "file": "/src/engine.ts",
+        "type": "    this.grad = 1\n    for (const v of topo.reverse()) v._backward()\n  }\n}\n"
+      }
+    }
+  ],
+  "audio": "/generated/micrograd-03-backward/audio.mp3",
+  "cueTimes": [
+    0,
+    16.613,
+    34.18,
+    52.569,
+    60.673,
+    77.391
+  ],
+  "durationSeconds": 95.526
+}

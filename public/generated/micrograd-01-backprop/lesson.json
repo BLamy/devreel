@@ -1,0 +1,96 @@
+{
+  "slug": "micrograd-01-backprop",
+  "title": "What is backpropagation?",
+  "subtitle": "The idea behind micrograd, in one picture",
+  "library": "micrograd",
+  "throughline": "the chain rule",
+  "persona": "devreel",
+  "accent": "#f59e0b",
+  "format": "video",
+  "series": "Build micrograd in TypeScript",
+  "seriesOrder": 1,
+  "editorSeed": {},
+  "editorDefaultFile": "/src/engine.ts",
+  "workspace": {
+    "files": {
+      "/package.json": "{\n  \"name\": \"micrograd-ts\",\n  \"type\": \"module\"\n}\n"
+    },
+    "previewPort": 3000
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "chapter": "The network",
+      "focus": "viz",
+      "narration": "We're going to build **micrograd** — Karpathy's tiny autograd engine — in TypeScript, from scratch.",
+      "say": "Welcome. Over this series we are going to build micrograd — Andrej Karpathy's tiny automatic differentiation engine — in TypeScript, from scratch, and train a real neural network with it. First, the idea we are chasing. Here is a small network: circles are numbers, edges are weights.",
+      "cue": "Here is a small network",
+      "action": {
+        "tool": "viz",
+        "animation": "neural-network",
+        "act": "the network"
+      }
+    },
+    {
+      "id": "s2",
+      "chapter": "Forward",
+      "focus": "viz",
+      "narration": "The **forward pass**: inputs flow left to right — weighted sums, then activations.",
+      "say": "The forward pass. Inputs flow left to right. Every neuron takes a weighted sum of the previous layer and pushes it through an activation. Nothing but multiplies, adds, and a squashing function.",
+      "cue": "Inputs flow left to right",
+      "action": {
+        "tool": "viz",
+        "animation": "neural-network",
+        "act": "forward pass"
+      }
+    },
+    {
+      "id": "s3",
+      "chapter": "The loss",
+      "focus": "viz",
+      "narration": "The output is a **guess**; the *loss* measures how wrong it is.",
+      "say": "At the end comes a guess, and the loss measures how wrong that guess is. One single number that summarizes our embarrassment. Training means making that number smaller.",
+      "cue": "summarizes our embarrassment",
+      "action": {
+        "tool": "viz",
+        "animation": "neural-network",
+        "act": "prediction vs target"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "Backward",
+      "focus": "viz",
+      "narration": "**Backpropagation**: the error flows backwards, and every weight learns its share of the blame — via the *chain rule*.",
+      "say": "And here is the trick the whole field runs on. The error flows backwards through the same graph, and every single weight receives exactly its share of the blame. That is the chain rule from calculus, applied mechanically, node by node.",
+      "cue": "exactly its share of the blame",
+      "action": {
+        "tool": "viz",
+        "animation": "neural-network",
+        "act": "backpropagation"
+      }
+    },
+    {
+      "id": "s5",
+      "chapter": "The plan",
+      "focus": "viz",
+      "narration": "Nudge each weight against its gradient, and the loss drops. **micrograd computes those gradients — in ~100 lines.** Let’s build it.",
+      "say": "Nudge every weight a tiny step against its gradient, and the loss drops. The machinery that computes those gradients — for any expression you can write — is micrograd, and the entire engine is about a hundred lines. Next part, we start typing it.",
+      "cue": "about a hundred lines",
+      "action": {
+        "tool": "viz",
+        "animation": "neural-network",
+        "act": "one gradient step"
+      }
+    }
+  ],
+  "audio": "/generated/micrograd-01-backprop/audio.mp3",
+  "cueTimes": [
+    0,
+    18.53,
+    30.871,
+    40.565,
+    54.3
+  ],
+  "durationSeconds": 70.171
+}
