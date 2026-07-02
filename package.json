@@ -6,7 +6,7 @@
   "description": "Tech-teacher influencer simulated-video bookshelf: real almostnode workspaces puppeted on a voiceover-synced timeline.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b --noEmit && NODE_OPTIONS=--max-old-space-size=16384 vite build",
+    "build": "tsc -b --noEmit && NODE_OPTIONS=--max-old-space-size=16384 vite build && node scripts/prune-oversize.mjs",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "explain": "node generator/cli.mjs",
