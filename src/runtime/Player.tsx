@@ -64,6 +64,39 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const hasAudio = !!lesson.audio
 
+  // Load narration via fetch → blob URL instead of <audio src>. almostnode's
+  // COI service worker intercepts every request and reconstructs the response
+  // to inject isolation headers (the coi-serviceworker pattern) — Chrome's
+  // media loader stalls forever on those rebuilt streams (readyState stays 0).
+  // A blob URL never touches the SW or the network, and makes seeks instant.
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!lesson.audio) {
+      setAudioUrl(null)
+      return
+    }
+    let cancelled = false
+    let objectUrl: string | null = null
+    fetch(lesson.audio)
+      .then((r) => {
+        if (!r.ok) throw new Error(`audio ${r.status}`)
+        return r.blob()
+      })
+      .then((blob) => {
+        if (cancelled) return
+        objectUrl = URL.createObjectURL(blob)
+        setAudioUrl(objectUrl)
+      })
+      .catch(() => {
+        // last resort: direct src (works when no SW controls the page)
+        if (!cancelled) setAudioUrl(lesson.audio!)
+      })
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [lesson.audio])
+
   // Derive scene index + progress.
   const index = useMemo(() => {
     let idx = 0
@@ -124,13 +157,13 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
       a.removeEventListener('timeupdate', onTime)
       a.removeEventListener('ended', onEnd)
     }
-  }, [hasAudio])
+  }, [hasAudio, audioUrl])
 
   useEffect(() => {
     const a = audioRef.current
     if (!a) return
     a.muted = muted
-  }, [muted])
+  }, [muted, audioUrl])
 
   // The feed flips forceUnmute once the user interacts; unmute the live audio.
   useEffect(() => {
@@ -161,7 +194,7 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
       cancelled = true
       a.removeEventListener('canplay', attempt)
     }
-  }, [playing])
+  }, [playing, audioUrl])
 
   // Show a play overlay only when audio hasn't started and we're not playing.
   const needsGesture = hasAudio && !playing && clock < 100
@@ -398,7 +431,7 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
       </div>
       )}
 
-      {hasAudio && <audio ref={audioRef} src={lesson.audio} preload="auto" muted={muted} />}
+      {hasAudio && audioUrl && <audio ref={audioRef} src={audioUrl} preload="auto" muted={muted} />}
     </div>
   )
 }

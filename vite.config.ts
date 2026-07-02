@@ -56,6 +56,37 @@ function almostnodeHosting() {
   };
 }
 
+// Cloudflare Workers static assets cap uploads at 25 MiB per file. almostnode's
+// OPTIONAL worker runtimes (runtime-worker ~85 MiB, tailscale-connect-worker
+// ~47 MiB, plus vite-bundled twins and sourcemaps) blow past that — and devreel
+// runs almostnode on the main thread, so those files are never fetched in
+// production. Drop anything undeployable after the bundle is written: a file
+// this size would fail `wrangler deploy` anyway, so pruning can only help.
+function pruneOversizeAssets(maxBytes = 24 * 1024 * 1024) {
+  const dist = fileURLToPath(new URL('./dist', import.meta.url));
+  const walk = (dir: string): string[] =>
+    fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =>
+      e.isDirectory() ? walk(`${dir}/${e.name}`) : [`${dir}/${e.name}`]
+    );
+  return {
+    name: 'devreel-prune-oversize-assets',
+    apply: 'build' as const,
+    closeBundle() {
+      if (!fs.existsSync(dist)) return;
+      for (const f of walk(dist)) {
+        const { size } = fs.statSync(f);
+        if (size <= maxBytes) continue;
+        fs.rmSync(f);
+        const map = `${f}.map`;
+        if (fs.existsSync(map)) fs.rmSync(map);
+        console.warn(
+          `[devreel] pruned undeployable asset (${(size / 1048576).toFixed(1)} MiB > 24 MiB): ${f.slice(dist.length + 1)}`
+        );
+      }
+    }
+  };
+}
+
 // almostnode requires cross-origin isolation for its service worker + WASM
 // (esbuild-wasm transforms, PGlite, the /__virtual__ preview proxy). The
 // almostnode vite plugin only serves /__sw__.js, so we set the headers here.
@@ -81,7 +112,7 @@ export default defineConfig({
       global: true,
       process: true
     }
-  }), almostnodePlugin(), almostnodeHosting()],
+  }), almostnodePlugin(), almostnodeHosting(), pruneOversizeAssets()],
   define: {
     global: 'globalThis'
   },
