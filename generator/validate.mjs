@@ -2,7 +2,10 @@
 // orly's validate-then-repair discipline: mutate safe fixes in place, return
 // { ok, errors, warnings }. The author loop re-runs until ok:true.
 
-const TOOLS = new Set(['editor', 'preview', 'terminal', 'database', 'diagram']);
+import { VIZ_MANIFEST } from '../src/viz/manifest.mjs';
+
+const TOOLS = new Set(['editor', 'preview', 'terminal', 'database', 'diagram', 'viz']);
+const VIZ_BY_ID = new Map(VIZ_MANIFEST.map((m) => [m.id, m]));
 
 const isStr = (v) => typeof v === 'string' && v.length > 0;
 
@@ -71,6 +74,15 @@ export function validateLesson(lesson) {
       } else if (a.tool === 'diagram') {
         if (!lesson.diagram || !Array.isArray(lesson.diagram.nodes) || !lesson.diagram.nodes.length)
           err(`${at}: diagram scene requires lesson.diagram.nodes`);
+      } else if (a.tool === 'viz') {
+        const m = VIZ_BY_ID.get(a.animation);
+        if (!isStr(a.animation) || !m) {
+          err(`${at}: viz action needs a known animation id (see src/viz/manifest.mjs); got "${a.animation}"`);
+        } else if (a.act != null && !m.acts.includes(a.act)) {
+          // repair: unknown act → drop it (the pane sweeps the whole animation)
+          warn(`${at}: viz animation "${a.animation}" has no act "${a.act}" — dropped (acts: ${m.acts.join(' | ')})`);
+          delete a.act;
+        }
       }
     }
   });

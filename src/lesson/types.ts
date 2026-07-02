@@ -54,7 +54,7 @@ export interface Badge {
 
 // ── Tools + scene actions ──────────────────────────────────────────────────
 
-export type ToolKind = 'editor' | 'preview' | 'terminal' | 'database' | 'diagram'
+export type ToolKind = 'editor' | 'preview' | 'terminal' | 'database' | 'diagram' | 'viz'
 
 /** Annotation anchored to a line in the editor. */
 export interface Callout {
@@ -146,12 +146,25 @@ export interface DiagramAction {
   badges?: Badge[]
 }
 
+/**
+ * A 3b1b-style explainer animation scene. `animation` is an id from
+ * src/viz/manifest.mjs; `act` names one act of its timeline — the scene plays
+ * that act from 0→1 paced by the narration (consecutive scenes usually play
+ * consecutive acts). Omit `act` to sweep the whole animation in one scene.
+ */
+export interface VizAction {
+  tool: 'viz'
+  animation: string
+  act?: string
+}
+
 export type SceneAction =
   | EditorAction
   | PreviewAction
   | TerminalAction
   | DatabaseAction
   | DiagramAction
+  | VizAction
 
 // ── Scene + Lesson ─────────────────────────────────────────────────────────
 

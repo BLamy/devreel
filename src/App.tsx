@@ -7,6 +7,7 @@ import { toolsDemo } from './lessons/toolsDemo'
 import { lesson as effectLesson } from './lessons/effect-basics.lesson.mjs'
 import { lesson as effectNodeLesson } from './lessons/effect-node.lesson.mjs'
 import { lesson as ddSmokeLesson } from './lessons/dd-smoke.lesson.mjs'
+import { lesson as vizDemoLesson } from './lessons/viz-demo.lesson.mjs'
 
 // Routing:
 //   default             → the feed homepage (YouTube grid / TikTok swipe)
@@ -23,6 +24,7 @@ export default function App() {
   if (params.get('sample') === 'effect') return <Player lesson={effectLesson} layout={layout} />
   if (params.get('sample') === 'effect-node') return <Player lesson={effectNodeLesson} layout={layout} />
   if (params.get('sample') === 'dd') return <Player lesson={ddSmokeLesson} layout={layout} />
+  if (params.get('sample') === 'viz') return <Player lesson={vizDemoLesson} layout={layout} />
   const slug = params.get('lesson')
   if (slug) return <LessonLoader slug={slug} layout={layout} />
   return <Feed />

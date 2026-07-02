@@ -6,17 +6,20 @@
   "description": "Tech-teacher influencer simulated-video bookshelf: real almostnode workspaces puppeted on a voiceover-synced timeline.",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b --noEmit && vite build",
+    "build": "tsc -b --noEmit && NODE_OPTIONS=--max-old-space-size=16384 vite build",
     "preview": "vite preview",
     "typecheck": "tsc -b --noEmit",
     "explain": "node generator/cli.mjs",
     "cf:deploy": "wrangler deploy",
-    "cf:preview": "wrangler versions upload"
+    "cf:preview": "wrangler versions upload",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build"
   },
   "dependencies": {
     "@electric-sql/pglite": "^0.2.17",
     "@xterm/addon-fit": "^0.10.0",
     "@xterm/xterm": "^5.5.0",
+    "3b1bd3": "file:../3b1bd3",
     "almostnode": "^0.2.14",
     "d3": "^7.9.0",
     "monaco-editor": "^0.52.2",
@@ -24,17 +27,28 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@chromatic-com/storybook": "^5.2.1",
     "@elevenlabs/elevenlabs-js": "^2.3.0",
+    "@storybook/addon-a11y": "^10.4.6",
+    "@storybook/addon-docs": "^10.4.6",
+    "@storybook/addon-mcp": "^0.6.0",
+    "@storybook/addon-vitest": "^10.4.6",
+    "@storybook/react-vite": "^10.4.6",
     "@types/d3": "^7.4.3",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^4.3.4",
+    "@vitest/browser-playwright": "^4.1.9",
+    "@vitest/coverage-v8": "^4.1.9",
     "dotenv": "^16.4.5",
+    "playwright": "^1.61.1",
+    "storybook": "^10.4.6",
     "typescript": "^5.6.3",
     "vite": "^5.4.11",
     "vite-plugin-node-polyfills": "^0.22.0",
     "vite-plugin-top-level-await": "^1.4.4",
     "vite-plugin-wasm": "^3.3.0",
+    "vitest": "^4.1.9",
     "wrangler": "^4.103.0"
   }
 }

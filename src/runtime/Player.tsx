@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { DatabaseAction, Lesson, PreviewAction, TerminalAction, ToolKind } from '../lesson/types'
+import type { DatabaseAction, Lesson, PreviewAction, TerminalAction, ToolKind, VizAction } from '../lesson/types'
 import { EditorPane } from '../panes/EditorPane'
 import { PreviewPane } from '../panes/PreviewPane'
 import { DiagramPane } from '../panes/DiagramPane'
 import { DbPane } from '../panes/DbPane'
 import { TerminalPane } from '../panes/TerminalPane'
+import { VizPane } from '../panes/VizPane'
 import { computeEditorView, openFiles } from './editorState'
 import { renderInlineMarkdown } from './markdown'
 
@@ -189,10 +190,22 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
   const dbAction: DatabaseAction | null = scene?.action?.tool === 'database' ? (scene.action as DatabaseAction) : null
   const terminalAction: TerminalAction | null = scene?.action?.tool === 'terminal' ? (scene.action as TerminalAction) : null
 
+  // The viz pane renders the most recent viz scene's animation: live progress
+  // while that scene plays, frozen at its final frame afterwards.
+  const { vizAction, vizProgress } = useMemo(() => {
+    for (let i = index; i >= 0; i--) {
+      const sc = lesson.scenes[i]
+      if (sc?.focus === 'viz' && sc.action?.tool === 'viz') {
+        return { vizAction: sc.action as VizAction, vizProgress: i === index ? progress : 1 }
+      }
+    }
+    return { vizAction: null, vizProgress: 0 }
+  }, [lesson, index, progress])
+
   const hasEditor = useMemo(() => lesson.scenes.some((s) => s.focus === 'editor'), [lesson])
   // Output tools (everything that pairs with the code), in display priority.
   const outputTools = useMemo<ToolKind[]>(
-    () => (['preview', 'diagram', 'database', 'terminal'] as ToolKind[]).filter((t) => lesson.scenes.some((s) => s.focus === t)),
+    () => (['preview', 'viz', 'diagram', 'database', 'terminal'] as ToolKind[]).filter((t) => lesson.scenes.some((s) => s.focus === t)),
     [lesson],
   )
   // The output pane to show now: the current scene's output focus, else the most
@@ -240,6 +253,7 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
   const outputNodes = outputTools.map((tool) => (
     <div key={tool} style={{ position: 'absolute', inset: 0, display: activeOutput === tool ? 'block' : 'none' }}>
       {tool === 'preview' && <PreviewPane files={lesson.workspace.files} port={lesson.workspace.previewPort} action={previewAction} actionNonce={index} liveFiles={liveFiles} />}
+      {tool === 'viz' && <VizPane action={vizAction} progress={vizProgress} />}
       {tool === 'diagram' && <DiagramPane lesson={lesson} sceneIndex={index} />}
       {tool === 'database' && <DbPane schema={lesson.workspace.dbSchema} action={dbAction} actionNonce={index} />}
       {tool === 'terminal' && <TerminalPane files={lesson.workspace.files} action={terminalAction} actionNonce={index} />}

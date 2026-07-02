@@ -4,6 +4,9 @@ import type { Callout, Diagnostic, EditorAction, Lesson, Scene } from '../lesson
 const NO_CALLOUTS: Callout[] = []
 const NO_DIAGS: Diagnostic[] = []
 
+// Finish typing within the first fraction of a scene; the rest is reading time.
+const TYPE_WINDOW = 0.62
+
 export interface EditorView {
   file: string
   content: string
@@ -71,14 +74,17 @@ export function computeEditorView(
     const base = files.get(a.file) ?? ''
     const incoming = a.replace != null ? a.replace : a.type ?? ''
     const animated = a.typed !== false && (a.type != null || a.replace != null)
+    // Type faster than the scene: finish the keystrokes within the first ~62% of
+    // the scene, leaving the rest to read while the narration explains it.
+    const typed = Math.min(1, progress / TYPE_WINDOW)
 
     if (a.replace != null) {
       // Replace: type the whole new content from scratch.
-      const shown = animated ? incoming.slice(0, Math.floor(progress * incoming.length)) : incoming
+      const shown = animated ? incoming.slice(0, Math.floor(typed * incoming.length)) : incoming
       files.set(a.file, shown)
       typing = animated && shown.length < incoming.length
     } else if (a.type != null) {
-      const add = animated ? incoming.slice(0, Math.floor(progress * incoming.length)) : incoming
+      const add = animated ? incoming.slice(0, Math.floor(typed * incoming.length)) : incoming
       files.set(a.file, base + add)
       typing = animated && add.length < incoming.length
     }

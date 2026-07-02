@@ -1,6 +1,25 @@
 {
   "lessons": [
     {
+      "slug": "dd-01-intro",
+      "title": "What is differential dataflow?",
+      "subtitle": "Work proportional to change, not data",
+      "library": "effect",
+      "persona": "devreel",
+      "accent": "#a21caf",
+      "format": "video",
+      "poster": {
+        "file": "/package.json",
+        "code": "{\n  \"name\": \"diff-dataflow\",\n  \"type\": \"module\"\n}"
+      },
+      "series": "Differential Dataflow in Effect",
+      "seriesOrder": 1,
+      "durationSeconds": 74,
+      "sceneCount": 5,
+      "href": "?lesson=dd-01-intro",
+      "createdAt": "2026-07-02T07:52:07.932Z"
+    },
+    {
       "slug": "dd-04-collection-test",
       "title": "Test it in the terminal",
       "subtitle": "A real multi-file run",
@@ -56,25 +75,6 @@
       "sceneCount": 8,
       "href": "?lesson=dd-02-collection-core",
       "createdAt": "2026-06-26T06:40:56.478Z"
-    },
-    {
-      "slug": "dd-01-intro",
-      "title": "What is differential dataflow?",
-      "subtitle": "Collections as multisets, changes as diffs",
-      "library": "effect",
-      "persona": "devreel",
-      "accent": "#a21caf",
-      "format": "video",
-      "poster": {
-        "file": "/package.json",
-        "code": "{\n  \"name\": \"diff-dataflow\",\n  \"type\": \"module\"\n}"
-      },
-      "series": "Differential Dataflow in Effect",
-      "seriesOrder": 1,
-      "durationSeconds": 44,
-      "sceneCount": 3,
-      "href": "?lesson=dd-01-intro",
-      "createdAt": "2026-06-26T06:40:35.454Z"
     },
     {
       "slug": "react-useeffect",

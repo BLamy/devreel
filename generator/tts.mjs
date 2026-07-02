@@ -11,6 +11,8 @@ export async function synthesizeLesson({
   voiceId,
   apiKey = process.env.ELEVENLABS_API_KEY,
   modelId = 'eleven_multilingual_v2',
+  // Slightly faster than default delivery so lessons don't drag (0.7–1.2).
+  speed = 1.1,
 }) {
   if (!apiKey) throw new Error('ELEVENLABS_API_KEY is required for TTS');
   const client = new ElevenLabsClient({ apiKey });
@@ -23,7 +25,11 @@ export async function synthesizeLesson({
     text += String(seg).trim();
   });
 
-  const res = await client.textToSpeech.convertWithTimestamps(voiceId, { text, modelId });
+  const res = await client.textToSpeech.convertWithTimestamps(voiceId, {
+    text,
+    modelId,
+    voiceSettings: { speed },
+  });
   const mp3 = Buffer.from(res.audioBase64, 'base64');
   const al = res.alignment;
   const starts = al.characterStartTimesSeconds;
