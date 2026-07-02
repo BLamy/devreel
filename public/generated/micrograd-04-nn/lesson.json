@@ -1,0 +1,118 @@
+{
+  "slug": "micrograd-04-nn",
+  "title": "Neurons, Layers, MLP",
+  "subtitle": "A neural net library in 50 lines",
+  "library": "micrograd",
+  "throughline": "the chain rule",
+  "persona": "devreel",
+  "accent": "#f59e0b",
+  "format": "video",
+  "series": "Build micrograd in TypeScript",
+  "seriesOrder": 4,
+  "stage": {
+    "editor": 1,
+    "mobileEditor": 1
+  },
+  "editorSeed": {
+    "/src/engine.ts": "export class Value {\n  grad = 0\n  _backward = () => {}\n\n  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op\n  }\n\n  add(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data + o.data, [this, o], '+')\n    out._backward = () => {\n      this.grad += out.grad\n      o.grad += out.grad\n    }\n    return out\n  }\n\n  mul(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data * o.data, [this, o], '*')\n    out._backward = () => {\n      this.grad += o.data * out.grad\n      o.grad += this.data * out.grad\n    }\n    return out\n  }\n\n  pow(n) {\n    const out = new Value(this.data ** n, [this], '**' + n)\n    out._backward = () => {\n      this.grad += n * this.data ** (n - 1) * out.grad\n    }\n    return out\n  }\n\n  relu() {\n    const out = new Value(this.data < 0 ? 0 : this.data, [this], 'ReLU')\n    out._backward = () => {\n      this.grad += (out.data > 0 ? 1 : 0) * out.grad\n    }\n    return out\n  }\n\n  neg() {\n    return this.mul(-1)\n  }\n\n  sub(other) {\n    return this.add(other instanceof Value ? other.neg() : -other)\n  }\n\n  div(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    return this.mul(o.pow(-1))\n  }\n\n  backward() {\n    const topo = []\n    const visited = new Set()\n    const build = (v) => {\n      if (visited.has(v)) return\n      visited.add(v)\n      for (const child of v._prev) build(child)\n      topo.push(v)\n    }\n    build(this)\n    this.grad = 1\n    for (const v of topo.reverse()) v._backward()\n  }\n}\n"
+  },
+  "editorDefaultFile": "/src/nn.ts",
+  "workspace": {
+    "files": {
+      "/src/engine.ts": "export class Value {\n  grad = 0\n  _backward = () => {}\n\n  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op\n  }\n\n  add(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data + o.data, [this, o], '+')\n    out._backward = () => {\n      this.grad += out.grad\n      o.grad += out.grad\n    }\n    return out\n  }\n\n  mul(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    const out = new Value(this.data * o.data, [this, o], '*')\n    out._backward = () => {\n      this.grad += o.data * out.grad\n      o.grad += this.data * out.grad\n    }\n    return out\n  }\n\n  pow(n) {\n    const out = new Value(this.data ** n, [this], '**' + n)\n    out._backward = () => {\n      this.grad += n * this.data ** (n - 1) * out.grad\n    }\n    return out\n  }\n\n  relu() {\n    const out = new Value(this.data < 0 ? 0 : this.data, [this], 'ReLU')\n    out._backward = () => {\n      this.grad += (out.data > 0 ? 1 : 0) * out.grad\n    }\n    return out\n  }\n\n  neg() {\n    return this.mul(-1)\n  }\n\n  sub(other) {\n    return this.add(other instanceof Value ? other.neg() : -other)\n  }\n\n  div(other) {\n    const o = other instanceof Value ? other : new Value(other)\n    return this.mul(o.pow(-1))\n  }\n\n  backward() {\n    const topo = []\n    const visited = new Set()\n    const build = (v) => {\n      if (visited.has(v)) return\n      visited.add(v)\n      for (const child of v._prev) build(child)\n      topo.push(v)\n    }\n    build(this)\n    this.grad = 1\n    for (const v of topo.reverse()) v._backward()\n  }\n}\n",
+      "/src/nn.ts": "import { Value } from './engine.ts'\n\nexport class Module {\n  zeroGrad() {\n    for (const p of this.parameters()) p.grad = 0\n  }\n  parameters() {\n    return []\n  }\n}\n\nexport class Neuron extends Module {\n  b = new Value(0)\n\n  constructor(nin, nonlin = true, rand = Math.random) {\n    super()\n    this.w = Array.from({ length: nin }, () => new Value(rand() * 2 - 1))\n    this.nonlin = nonlin\n  }\n\n  call(x) {\n    let act = this.b\n    for (let i = 0; i < this.w.length; i++) act = act.add(this.w[i].mul(x[i]))\n    return this.nonlin ? act.relu() : act\n  }\n\n  parameters() {\n    return [...this.w, this.b]\n  }\n}\n\nexport class Layer extends Module {\n  constructor(nin, nout, nonlin = true, rand = Math.random) {\n    super()\n    this.neurons = Array.from({ length: nout }, () => new Neuron(nin, nonlin, rand))\n  }\n\n  call(x) {\n    return this.neurons.map((n) => n.call(x))\n  }\n\n  parameters() {\n    return this.neurons.flatMap((n) => n.parameters())\n  }\n}\n\nexport class MLP extends Module {\n  constructor(nin, nouts, rand = Math.random) {\n    super()\n    const sz = [nin, ...nouts]\n    this.layers = sz.slice(0, -1).map((_, i) => new Layer(sz[i], sz[i + 1], i !== nouts.length - 1, rand))\n  }\n\n  call(x) {\n    let out = x\n    for (const layer of this.layers) out = layer.call(out)\n    return out\n  }\n\n  parameters() {\n    return this.layers.flatMap((l) => l.parameters())\n  }\n}\n",
+      "/package.json": "{\n  \"name\": \"micrograd-ts\",\n  \"type\": \"module\"\n}\n"
+    },
+    "previewPort": 3000
+  },
+  "scenes": [
+    {
+      "id": "s1",
+      "chapter": "Module",
+      "focus": "editor",
+      "narration": "A base `Module`: `parameters()` lists trainable Values; `zeroGrad()` resets their gradients. (Note the explicit `.ts` import.)",
+      "say": "New file: the neural net library, importing Value from the engine — note the explicit dot t s extension, which this runtime requires. Module is the tiny base class: parameters returns every trainable Value, and zeroGrad walks them and resets each gradient to zero. Remember that gradients accumulate — this reset will matter more than it looks.",
+      "cue": "this reset will matter",
+      "action": {
+        "tool": "editor",
+        "file": "/src/nn.ts",
+        "type": "import { Value } from './engine.ts'\n\nexport class Module {\n  zeroGrad() {\n    for (const p of this.parameters()) p.grad = 0\n  }\n  parameters() {\n    return []\n  }\n}\n\n"
+      }
+    },
+    {
+      "id": "s2",
+      "chapter": "Neuron",
+      "focus": "editor",
+      "narration": "A `Neuron`: `nin` random weights in ±1, a bias at 0. The `rand` parameter keeps runs **reproducible**.",
+      "say": "A Neuron holds one weight per input, initialized uniformly between minus one and one, plus a bias starting at zero. Two small notes: nonlin decides whether it applies relu, and we accept the random function as a parameter — pass a seeded one and every run of this series reproduces exactly.",
+      "cue": "one weight per input",
+      "action": {
+        "tool": "editor",
+        "file": "/src/nn.ts",
+        "type": "export class Neuron extends Module {\n  b = new Value(0)\n\n  constructor(nin, nonlin = true, rand = Math.random) {\n    super()\n    this.w = Array.from({ length: nin }, () => new Value(rand() * 2 - 1))\n    this.nonlin = nonlin\n  }\n\n"
+      }
+    },
+    {
+      "id": "s3",
+      "chapter": "Forward",
+      "focus": "editor",
+      "narration": "`call(x)`: the weighted sum `Σ wᵢ·xᵢ + b`, then `relu`. **Every step builds the graph** — so backprop through a neuron is already done.",
+      "say": "Calling the neuron is the weighted sum: start from the bias, and for each input, add weight i times x i. Then relu, unless this is a linear output neuron. Look at what we did not write: any backward logic. Every add and mul here is a Value operation, so the expression graph — and therefore backprop — comes along automatically.",
+      "cue": "comes along automatically",
+      "action": {
+        "tool": "editor",
+        "file": "/src/nn.ts",
+        "type": "  call(x) {\n    let act = this.b\n    for (let i = 0; i < this.w.length; i++) act = act.add(this.w[i].mul(x[i]))\n    return this.nonlin ? act.relu() : act\n  }\n\n  parameters() {\n    return [...this.w, this.b]\n  }\n}\n\n"
+      }
+    },
+    {
+      "id": "s4",
+      "chapter": "Layer",
+      "focus": "editor",
+      "narration": "A `Layer` is just **nout neurons side by side**, each seeing the same input.",
+      "say": "A Layer is nothing clever: n out independent neurons, each looking at the same input vector. Calling it maps the input through every neuron, and its parameters are all of theirs flattened together.",
+      "cue": "independent neurons",
+      "action": {
+        "tool": "editor",
+        "file": "/src/nn.ts",
+        "type": "export class Layer extends Module {\n  constructor(nin, nout, nonlin = true, rand = Math.random) {\n    super()\n    this.neurons = Array.from({ length: nout }, () => new Neuron(nin, nonlin, rand))\n  }\n\n  call(x) {\n    return this.neurons.map((n) => n.call(x))\n  }\n\n  parameters() {\n    return this.neurons.flatMap((n) => n.parameters())\n  }\n}\n\n"
+      }
+    },
+    {
+      "id": "s5",
+      "chapter": "MLP",
+      "focus": "editor",
+      "narration": "An `MLP` chains layers: sizes like `(2, [4, 1])`. The **last layer stays linear** (`i !== nouts.length - 1`).",
+      "say": "And the multi-layer perceptron chains layers. You give it the input size and a list of layer sizes — two inputs, then four hidden, then one output. The one subtlety is that the final layer is linear: the comparison i not equal to the last index switches relu off there, so the output can be any number, not just positives.",
+      "cue": "the final layer is linear",
+      "action": {
+        "tool": "editor",
+        "file": "/src/nn.ts",
+        "type": "export class MLP extends Module {\n  constructor(nin, nouts, rand = Math.random) {\n    super()\n    const sz = [nin, ...nouts]\n    this.layers = sz.slice(0, -1).map((_, i) => new Layer(sz[i], sz[i + 1], i !== nouts.length - 1, rand))\n  }\n\n"
+      }
+    },
+    {
+      "id": "s6",
+      "chapter": "Done",
+      "focus": "editor",
+      "narration": "`call` feeds each layer’s output to the next. That’s the whole library — **a trainable neural net over our 100-line engine.**",
+      "say": "Calling the MLP just threads the data through: each layer's output becomes the next layer's input. And with that, the library is done — a genuinely trainable neural network, sitting on top of our hundred-line engine. Next part: we train it, live, in the terminal.",
+      "cue": "the library is done",
+      "action": {
+        "tool": "editor",
+        "file": "/src/nn.ts",
+        "type": "  call(x) {\n    let out = x\n    for (const layer of this.layers) out = layer.call(out)\n    return out\n  }\n\n  parameters() {\n    return this.layers.flatMap((l) => l.parameters())\n  }\n}\n"
+      }
+    }
+  ],
+  "audio": "/generated/micrograd-04-nn/audio.mp3",
+  "cueTimes": [
+    0,
+    21.362,
+    39.462,
+    60.175,
+    71.228,
+    91.162
+  ],
+  "durationSeconds": 106.348
+}

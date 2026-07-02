@@ -50,30 +50,47 @@ const C = '/src/collection.ts'
 const CT = '/collection.test.ts'
 
 export const parts = build([
-  // ── Part 1 — the idea ─────────────────────────────────────────────────────
+  // ── Part 1 — the idea (a pure viz beat: the 3b1b explainer) ───────────────
   {
     slug: 'dd-01-intro',
     title: 'What is differential dataflow?',
-    subtitle: 'Collections as multisets, changes as diffs',
+    subtitle: 'Work proportional to change, not data',
     file: C,
     scenes: [
       {
-        id: 's1', chapter: 'The idea', focus: 'editor',
-        narration: "We're going to **build** a differential dataflow engine in Effect — from scratch, with tests.",
-        say: "Welcome. Over this series we are going to build a small differential dataflow engine in Effect, from scratch, and run its tests in the terminal. Let me start with the core idea.",
-        cue: 'build a small differential dataflow',
+        id: 's1', chapter: 'The idea', focus: 'viz',
+        narration: 'A computation is a **pipeline**: records flow through operators into a live result.',
+        say: "Welcome. Over this series we are going to build a small differential dataflow engine in Effect, from scratch, and run its tests. First, the idea itself. Think of a computation as a pipeline: records flow in, pass through operators, and a result collects on the other side.",
+        cue: 'think of a computation as a pipeline',
+        action: { tool: 'viz', animation: 'differential-dataflow', act: 'a dataflow' },
       },
       {
-        id: 's2', chapter: 'Multisets', focus: 'editor',
-        narration: 'The key idea: a collection is a **multiset** — every value carries an integer count (its *multiplicity*).',
-        say: "Here is the key idea. Instead of a plain list, a collection is a multiset: every value carries an integer count, called its multiplicity. So two apples and one pear is just apple times two, pear times one.",
-        cue: 'a collection is a multiset',
+        id: 's2', chapter: 'The batch trap', focus: 'viz',
+        narration: 'One new record arrives… and **batch** recomputes *everything*.',
+        say: "Now one new record arrives. The traditional batch answer is brutal: throw the result away and recompute everything, all ten thousand records, for one change.",
+        cue: 'throw the result away',
+        action: { tool: 'viz', animation: 'differential-dataflow', act: 'the batch way' },
       },
       {
-        id: 's3', chapter: 'Diffs', focus: 'editor',
-        narration: 'A **change** is also a multiset — with **negative** counts for removals. We move *diffs* around, never whole snapshots. That is what makes it incremental.',
-        say: "And a change is also a multiset, but counts can be negative. A plus one adds something; a minus one retracts it. The whole trick of differential dataflow is that we move these diffs through the computation, never recomputing whole snapshots. That is what makes it incremental. Let's write the multiset.",
-        cue: 'a change is also a multiset',
+        id: 's3', chapter: 'Diffs', focus: 'viz',
+        narration: 'Differential ships **differences**: `(data, time, +1)` — never whole snapshots.',
+        say: "Differential dataflow refuses. It represents a collection as changes: this record, plus one. Only the difference flows through the pipeline, and the result just adjusts. Work done: one record.",
+        cue: 'only the difference flows',
+        action: { tool: 'viz', animation: 'differential-dataflow', act: 'differences, not snapshots' },
+      },
+      {
+        id: 's4', chapter: 'The frontier', focus: 'viz',
+        narration: 'Changes carry **timestamps**; the *frontier* proves when an answer is complete — even with **retractions** (−1).',
+        say: "With changes streaming in, including retractions — minus one — when is an answer safe to show? Every change carries a timestamp, and the frontier is the system's proof that no earlier input can still arrive. Outputs commit exactly when the frontier passes them.",
+        cue: 'when is an answer safe',
+        action: { tool: 'viz', animation: 'differential-dataflow', act: 'timestamps and the frontier' },
+      },
+      {
+        id: 's5', chapter: 'Why it matters', focus: 'viz',
+        narration: 'Batch: work ∝ **data**. Differential: work ∝ **change**. Let’s build it.',
+        say: "That is the whole trade. Batch does work proportional to your data; differential does work proportional to your change. When data is huge and changes are tiny, that is not a little faster — it is a different sport. Let's go build one: a multiset of values with integer counts, where negative counts are retractions.",
+        cue: 'proportional to your change',
+        action: { tool: 'viz', animation: 'differential-dataflow', act: 'why it scales' },
       },
     ],
   },

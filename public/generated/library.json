@@ -1,6 +1,120 @@
 {
   "lessons": [
     {
+      "slug": "micrograd-05-training",
+      "title": "Train it on XOR",
+      "subtitle": "Gradient descent, a classic bug, and a live run",
+      "library": "micrograd",
+      "persona": "devreel",
+      "accent": "#f59e0b",
+      "format": "video",
+      "poster": {
+        "file": "/train.ts",
+        "code": "import { Value } from './src/engine.ts'\nimport { MLP } from './src/nn.ts'\n// deterministic init so your run matches thi…\nfunction mulberry32(seed) {\n  let a = seed >>> 0\n  return () => {\n    a |= 0"
+      },
+      "series": "Build micrograd in TypeScript",
+      "seriesOrder": 5,
+      "durationSeconds": 123,
+      "sceneCount": 6,
+      "href": "?lesson=micrograd-05-training",
+      "createdAt": "2026-07-02T13:11:17.443Z"
+    },
+    {
+      "slug": "micrograd-04-nn",
+      "title": "Neurons, Layers, MLP",
+      "subtitle": "A neural net library in 50 lines",
+      "library": "micrograd",
+      "persona": "devreel",
+      "accent": "#f59e0b",
+      "format": "video",
+      "poster": {
+        "file": "/src/nn.ts",
+        "code": "import { Value } from './engine.ts'\nexport class Module {\n  zeroGrad() {\n    for (const p of this.parameters()) p.grad…\n  }\n  parameters() {\n    return []"
+      },
+      "series": "Build micrograd in TypeScript",
+      "seriesOrder": 4,
+      "durationSeconds": 106,
+      "sceneCount": 6,
+      "href": "?lesson=micrograd-04-nn",
+      "createdAt": "2026-07-02T13:10:54.930Z"
+    },
+    {
+      "slug": "micrograd-03-backward",
+      "title": "The backward pass",
+      "subtitle": "pow, relu, and the topological walk",
+      "library": "micrograd",
+      "persona": "devreel",
+      "accent": "#f59e0b",
+      "format": "video",
+      "poster": {
+        "file": "/src/engine.ts",
+        "code": "export class Value {\n  grad = 0\n  _backward = () => {}\n  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op"
+      },
+      "series": "Build micrograd in TypeScript",
+      "seriesOrder": 3,
+      "durationSeconds": 96,
+      "sceneCount": 6,
+      "href": "?lesson=micrograd-03-backward",
+      "createdAt": "2026-07-02T13:10:35.267Z"
+    },
+    {
+      "slug": "micrograd-02-value",
+      "title": "The Value class",
+      "subtitle": "One scalar, its gradient, and the graph",
+      "library": "micrograd",
+      "persona": "devreel",
+      "accent": "#f59e0b",
+      "format": "video",
+      "poster": {
+        "file": "/src/engine.ts",
+        "code": "export class Value {\n  grad = 0\n  _backward = () => {}\n  constructor(data, children = [], op = '') {\n    this.data = data\n    this._prev = new Set(children)\n    this._op = op"
+      },
+      "series": "Build micrograd in TypeScript",
+      "seriesOrder": 2,
+      "durationSeconds": 113,
+      "sceneCount": 6,
+      "href": "?lesson=micrograd-02-value",
+      "createdAt": "2026-07-02T13:10:14.005Z"
+    },
+    {
+      "slug": "micrograd-01-backprop",
+      "title": "What is backpropagation?",
+      "subtitle": "The idea behind micrograd, in one picture",
+      "library": "micrograd",
+      "persona": "devreel",
+      "accent": "#f59e0b",
+      "format": "video",
+      "poster": {
+        "file": "/package.json",
+        "code": "{\n  \"name\": \"micrograd-ts\",\n  \"type\": \"module\"\n}"
+      },
+      "series": "Build micrograd in TypeScript",
+      "seriesOrder": 1,
+      "durationSeconds": 70,
+      "sceneCount": 5,
+      "href": "?lesson=micrograd-01-backprop",
+      "createdAt": "2026-07-02T12:49:03.304Z"
+    },
+    {
+      "slug": "dd-01-intro",
+      "title": "What is differential dataflow?",
+      "subtitle": "Work proportional to change, not data",
+      "library": "effect",
+      "persona": "devreel",
+      "accent": "#a21caf",
+      "format": "video",
+      "poster": {
+        "file": "/package.json",
+        "code": "{\n  \"name\": \"diff-dataflow\",\n  \"type\": \"module\"\n}"
+      },
+      "series": "Differential Dataflow in Effect",
+      "seriesOrder": 1,
+      "durationSeconds": 74,
+      "sceneCount": 5,
+      "href": "?lesson=dd-01-intro",
+      "createdAt": "2026-07-02T07:52:07.932Z"
+    },
+    {
       "slug": "dd-04-collection-test",
       "title": "Test it in the terminal",
       "subtitle": "A real multi-file run",
@@ -56,25 +170,6 @@
       "sceneCount": 8,
       "href": "?lesson=dd-02-collection-core",
       "createdAt": "2026-06-26T06:40:56.478Z"
-    },
-    {
-      "slug": "dd-01-intro",
-      "title": "What is differential dataflow?",
-      "subtitle": "Collections as multisets, changes as diffs",
-      "library": "effect",
-      "persona": "devreel",
-      "accent": "#a21caf",
-      "format": "video",
-      "poster": {
-        "file": "/package.json",
-        "code": "{\n  \"name\": \"diff-dataflow\",\n  \"type\": \"module\"\n}"
-      },
-      "series": "Differential Dataflow in Effect",
-      "seriesOrder": 1,
-      "durationSeconds": 44,
-      "sceneCount": 3,
-      "href": "?lesson=dd-01-intro",
-      "createdAt": "2026-06-26T06:40:35.454Z"
     },
     {
       "slug": "react-useeffect",

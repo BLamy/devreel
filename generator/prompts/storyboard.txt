@@ -46,7 +46,7 @@ THE LESSON SHAPE
 
 A Scene:
   { id, chapter?, title?, narration, say?, cue?, focus, action? }
-- focus is the tool in the spotlight: "editor" | "preview" | "terminal" | "database" | "diagram".
+- focus is the tool in the spotlight: "editor" | "preview" | "terminal" | "database" | "diagram" | "viz".
 - narration: the on-screen caption. Supports **bold**, *italic*, `code`.
 - say: OPTIONAL clean spoken line (overrides narration for TTS). Use it whenever the
   narration contains code/symbols so the voice reads naturally (no slashes, braces,
@@ -71,6 +71,76 @@ A Scene:
   database: { tool:"database", query:"SELECT ...", highlight?:"<column>" }   // needs workspace.dbSchema
   diagram:  { tool:"diagram", reveal?:[ids], highlight?:[ids], activeEdges?:[ids],
               messages?:[{from,to,label}] }                                  // needs lesson.diagram
+  viz:      { tool:"viz", animation:"<id>", act?:"<act name>" }
+
+THE VIZ TOOL — 3b1b-style concept animations. Use it to explain the CONCEPT behind
+the code: what attention IS before typing an attention block, why momentum escapes
+local minima before tuning an optimizer, what convolution means before writing a
+filter. Use EXACT ids and act names from the catalog below (source of truth:
+`src/viz/manifest.mjs`; the validator rejects unknown animation ids and drops
+unknown act names with a warning — the scene then sweeps the whole animation).
+- One scene plays ONE act, paced to that scene's narration. Play acts IN ORDER
+  across consecutive scenes (each animation is a story: its acts build on each
+  other). You may stop early — you don't have to play every act.
+- Write the scene's `say` yourself, grounded in what that act shows (the manifest
+  summary tells you); do NOT just restate the act name. The animation's visuals
+  carry captions already, so the voice should add insight, not read labels.
+- A viz beat of 2–5 scenes at the START of a lesson (concept first, then code) or
+  right BEFORE the tricky code it explains works best. Don't scatter single viz
+  scenes randomly between typing scenes.
+- Viz scenes need no workspace files. A lesson may even be pure viz (a concept
+  explainer with no code) — then workspace.files can be empty.
+
+VIZ CATALOG — BEGIN GENERATED (node generator/viz-catalog.mjs to regenerate)
+  linear-transformation — A 2×2 matrix morphs the plane: basis vectors, a passenger vector, determinant as area.
+    acts: the plane | a matrix moves space | rewind | meet a vector | v rides along | determinant
+  linear-transformation-shear — Same story with a pure shear matrix [1 1; 0 1].
+    acts: the plane | a matrix moves space | rewind | meet a vector | v rides along | determinant
+  linear-transformation-rotation — Same story with a (slightly scaled) rotation — nothing stretches unevenly.
+    acts: the plane | a matrix moves space | rewind | meet a vector | v rides along | determinant
+  linear-transformation-singular — det = 0: the plane collapses onto a line, a dimension is lost.
+    acts: the plane | a matrix moves space | rewind | meet a vector | v rides along | determinant
+  eigenvectors — A ring of vectors hit by M — two directions never turn; finale is power iteration (PageRank).
+    acts: a ring of vectors | transform them all | two directions survive | they only scale | repeat M: power iteration
+  svd-decomposition — Every matrix staged as rotate → stretch → rotate (M = U·Σ·Vᵀ), with proof overlay.
+    acts: any matrix | first: rotate | then: stretch | finally: rotate again | M = U Σ Vᵀ
+  fourier-epicycles — Rotating vector chain draws a square wave; harmonics sharpen the corners.
+    acts: one circle | add the 3rd harmonic | seven terms | twenty-five terms
+  fourier-winding — Wind a signal around a circle; the center of mass lurches at frequencies hidden inside — the transform itself.
+    acts: a chord of two notes | wrap it around a circle | sweep to two hertz | and three | the Fourier transform
+  convolution-smooth — Flip–slide–multiply–sum with a Gaussian kernel: blur / moving average / low-pass.
+    acts: two functions | flip and slide | multiply, then sum | the result | why it matters
+  convolution-edge — Same machine with a derivative kernel: fires only at changes — a CNN first layer.
+    acts: two functions | flip and slide | multiply, then sum | the result | why it matters
+  taylor-series — Polynomials hug sin(x) one order at a time; higher orders hold on longer.
+    acts: a difficult function | the best line | add a cubic | higher orders | the payoff
+  gradient-descent — Three optimizers race on a two-valley landscape; only momentum escapes the local minimum.
+    acts: the loss landscape | gradient descent | momentum | Adam | compare
+  central-limit — A Galton board: 220 balls of coin flips stack into a bell curve.
+    acts: one ball | two hundred more | the bell emerges | the central limit theorem
+  bayes-theorem — The medical-test classic as areas: 90 true positives drown in 891 false ones → 9.2%.
+    acts: a population | the prior | the test | you test positive | the posterior
+  kl-divergence — Two distributions compared pointwise; the weighted surprise integrates to KL — and it is not symmetric.
+    acts: two beliefs | pointwise surprise | weight by P | swap them | why ML cares
+  neural-network — Real forward pass, softmax loss, backprop blame, one honest gradient step.
+    acts: the network | forward pass | prediction vs target | backpropagation | one gradient step
+  attention-mechanism — Tokens → Q/K/V; one query scores every key, softmax mixes the values; finale is the n×n matrix.
+    acts: tokens become vectors | queries, keys, values | one token asks | softmax | mix the values | every pair at once
+  embedding-arithmetic — king − man + woman ≈ queen: meaning as directions in vector space.
+    acts: words as points | meaning has directions | move the direction | the analogy completes | directions are everywhere
+  diffusion-process — Two moons noised to a Gaussian and denoised back along the exact same paths.
+    acts: the data | forward: drown it in noise | pure noise | reverse: learn the way back | that is the whole trick
+  graph-bfs — A wavefront floods a network level by level; shortest paths fall out for free.
+    acts: a network | start somewhere | explore in waves | shortest paths for free | the pattern everywhere
+  differential-dataflow — A counting pipeline: batch recomputes the world per change; differential ships (data, time, ±1) deltas and the frontier decides when outputs commit.
+    acts: a dataflow | the batch way | differences, not snapshots | timestamps and the frontier | why it scales
+  arch-cache-aside — Client → CDN → LB → services with Redis + Postgres: a cold miss, a warm hit, and the invalidation trap.
+    acts: the architecture | cold read: a cache miss | warm read: a cache hit | the hard part: invalidation
+  arch-aws-multi-az — ALB + instances across two availability zones + RDS primary/standby: normal traffic, an AZ outage, failover.
+    acts: the architecture | a normal request | zone A goes dark | failover: the standby takes over
+  arch-vercel-edge — Browser → edge network (CDN + middleware) → serverless origin: an edge hit, a dynamic render, and ISR.
+    acts: the architecture | static: answered at the edge | dynamic: render at the origin | ISR: stale now, fresh in the background
+VIZ CATALOG — END GENERATED
 
 SCENE DISCIPLINE — be thorough, never rushed. The viewer must understand EVERY line.
 - TYPE IN SMALL PIECES: one scene per line or tiny cluster (an import, one const, one

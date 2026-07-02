@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import type { DatabaseAction, Lesson, PreviewAction, TerminalAction, ToolKind } from '../lesson/types'
+import type { DatabaseAction, Lesson, PreviewAction, TerminalAction, ToolKind, VizAction } from '../lesson/types'
 import { EditorPane } from '../panes/EditorPane'
 import { PreviewPane } from '../panes/PreviewPane'
 import { DiagramPane } from '../panes/DiagramPane'
 import { DbPane } from '../panes/DbPane'
 import { TerminalPane } from '../panes/TerminalPane'
+import { VizPane } from '../panes/VizPane'
 import { computeEditorView, openFiles } from './editorState'
 import { renderInlineMarkdown } from './markdown'
 
@@ -62,6 +63,39 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
   const [muted, setMuted] = useState(startMuted)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const hasAudio = !!lesson.audio
+
+  // Load narration via fetch → blob URL instead of <audio src>. almostnode's
+  // COI service worker intercepts every request and reconstructs the response
+  // to inject isolation headers (the coi-serviceworker pattern) — Chrome's
+  // media loader stalls forever on those rebuilt streams (readyState stays 0).
+  // A blob URL never touches the SW or the network, and makes seeks instant.
+  const [audioUrl, setAudioUrl] = useState<string | null>(null)
+  useEffect(() => {
+    if (!lesson.audio) {
+      setAudioUrl(null)
+      return
+    }
+    let cancelled = false
+    let objectUrl: string | null = null
+    fetch(lesson.audio)
+      .then((r) => {
+        if (!r.ok) throw new Error(`audio ${r.status}`)
+        return r.blob()
+      })
+      .then((blob) => {
+        if (cancelled) return
+        objectUrl = URL.createObjectURL(blob)
+        setAudioUrl(objectUrl)
+      })
+      .catch(() => {
+        // last resort: direct src (works when no SW controls the page)
+        if (!cancelled) setAudioUrl(lesson.audio!)
+      })
+    return () => {
+      cancelled = true
+      if (objectUrl) URL.revokeObjectURL(objectUrl)
+    }
+  }, [lesson.audio])
 
   // Derive scene index + progress.
   const index = useMemo(() => {
@@ -123,13 +157,13 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
       a.removeEventListener('timeupdate', onTime)
       a.removeEventListener('ended', onEnd)
     }
-  }, [hasAudio])
+  }, [hasAudio, audioUrl])
 
   useEffect(() => {
     const a = audioRef.current
     if (!a) return
     a.muted = muted
-  }, [muted])
+  }, [muted, audioUrl])
 
   // The feed flips forceUnmute once the user interacts; unmute the live audio.
   useEffect(() => {
@@ -160,7 +194,7 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
       cancelled = true
       a.removeEventListener('canplay', attempt)
     }
-  }, [playing])
+  }, [playing, audioUrl])
 
   // Show a play overlay only when audio hasn't started and we're not playing.
   const needsGesture = hasAudio && !playing && clock < 100
@@ -189,10 +223,22 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
   const dbAction: DatabaseAction | null = scene?.action?.tool === 'database' ? (scene.action as DatabaseAction) : null
   const terminalAction: TerminalAction | null = scene?.action?.tool === 'terminal' ? (scene.action as TerminalAction) : null
 
+  // The viz pane renders the most recent viz scene's animation: live progress
+  // while that scene plays, frozen at its final frame afterwards.
+  const { vizAction, vizProgress } = useMemo(() => {
+    for (let i = index; i >= 0; i--) {
+      const sc = lesson.scenes[i]
+      if (sc?.focus === 'viz' && sc.action?.tool === 'viz') {
+        return { vizAction: sc.action as VizAction, vizProgress: i === index ? progress : 1 }
+      }
+    }
+    return { vizAction: null, vizProgress: 0 }
+  }, [lesson, index, progress])
+
   const hasEditor = useMemo(() => lesson.scenes.some((s) => s.focus === 'editor'), [lesson])
   // Output tools (everything that pairs with the code), in display priority.
   const outputTools = useMemo<ToolKind[]>(
-    () => (['preview', 'diagram', 'database', 'terminal'] as ToolKind[]).filter((t) => lesson.scenes.some((s) => s.focus === t)),
+    () => (['preview', 'viz', 'diagram', 'database', 'terminal'] as ToolKind[]).filter((t) => lesson.scenes.some((s) => s.focus === t)),
     [lesson],
   )
   // The output pane to show now: the current scene's output focus, else the most
@@ -240,6 +286,7 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
   const outputNodes = outputTools.map((tool) => (
     <div key={tool} style={{ position: 'absolute', inset: 0, display: activeOutput === tool ? 'block' : 'none' }}>
       {tool === 'preview' && <PreviewPane files={lesson.workspace.files} port={lesson.workspace.previewPort} action={previewAction} actionNonce={index} liveFiles={liveFiles} />}
+      {tool === 'viz' && <VizPane action={vizAction} progress={vizProgress} />}
       {tool === 'diagram' && <DiagramPane lesson={lesson} sceneIndex={index} />}
       {tool === 'database' && <DbPane schema={lesson.workspace.dbSchema} action={dbAction} actionNonce={index} />}
       {tool === 'terminal' && <TerminalPane files={lesson.workspace.files} action={terminalAction} actionNonce={index} />}
@@ -384,7 +431,7 @@ export function Player({ lesson, layout = 'horizontal', autoplay = true, startMu
       </div>
       )}
 
-      {hasAudio && <audio ref={audioRef} src={lesson.audio} preload="auto" muted={muted} />}
+      {hasAudio && audioUrl && <audio ref={audioRef} src={audioUrl} preload="auto" muted={muted} />}
     </div>
   )
 }

@@ -6,3 +6,6 @@ public/assets
 *.log
 .DS_Store
 .vite
+
+*storybook.log
+storybook-static

@@ -31,6 +31,12 @@ by **you (Claude Code)** — no Anthropic key needed.
    real common error + fix (editor diagnostics), and ends on the live preview.
    Write it to `src/lessons/<slug>.lesson.mjs` as `export const lesson = { ... }`.
 
+   **Concept beats:** when the topic has a deep idea behind it (attention, gradient
+   descent, convolution, eigenvectors, Bayes, diffusion, BFS…), open with a short
+   `viz` beat — 2–5 scenes playing consecutive acts of one animation from
+   `src/viz/manifest.mjs` (`{ tool:"viz", animation:"<id>", act:"<act>" }`) — then
+   cut to the code. The storyboard prompt has the full rules.
+
 4. **Validate** until ok:true (fix every error):
    ```bash
    node -e "import('./src/lessons/<SLUG>.lesson.mjs').then(async m=>{const v=(await import('./generator/validate.mjs')).validateLesson(m.lesson);console.log(JSON.stringify(v,null,2))})"
